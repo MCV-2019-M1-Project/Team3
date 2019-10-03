@@ -1,7 +1,6 @@
 import os
- 
 import cv2
- 
+import pickle 
  
 class Database(object):
  
@@ -12,6 +11,9 @@ class Database(object):
             root_path: path with datasets folders
             has_masks: flag for searching gt masks
         """
+        self.prototypes = {}
+        self.query_sets = []
+
         if os.path.exists(root_path):
             self.datasets = []
  
@@ -21,18 +23,25 @@ class Database(object):
                 dataset_name = path.split("/")[-1]
                 dataset_dict = {
                     'dataset_name': dataset_name,
-                    'is_proto': True if "qs" not in dataset_name else False}
+                    }
                 if not files:
                     raise Exception("empty dataset")
                 else:
                     images = [os.path.join(path, x) for x in files if x.endswith(".jpg")]
                     dataset_dict['file_names'] = images
                     dataset_dict["images"] = self.load_dataset_images(images)
+
+                if "qs" not in dataset_name:
+                    self.prototypes = dataset_dict
+                else:
                     if has_masks:
                         masks = [os.path.join(path, x) for x in files if x.endswith(".png")]
                         dataset_dict["masks"] = self.load_dataset_images(masks)
- 
-                self.datasets.append(dataset_dict)
+                    gt = [os.path.join(path, x) for x in files if x.endswith(".pkl")][0]
+                    with open(gt, "rb") as f:
+                    	dataset_dict['gt'] = pickle.load(f)
+
+                    self.query_sets.append(dataset_dict)
         else:
             raise Exception("root path not found")
  
@@ -70,7 +79,7 @@ class Database(object):
         return ims_dict
  
     def __str__(self):
-        return "Database: {}".format(self.datasets)
+        return "Database:\n \tPrototypes folder: {}\n \tQuery sets: {}".format(self.prototypes.keys(), self.query_sets)
  
  
 if __name__ == '__main__':
@@ -78,6 +87,3 @@ if __name__ == '__main__':
     db = Database("data")
  
     print(db)
- 
-    for dataset in db.datasets:
-        print(dataset.keys())
