@@ -29,3 +29,12 @@ def mask_background(image, thr):
             (image < (thr + e)) & (image > (thr - e)), 0, 1).astype("uint8")
 
     return mask[..., None]
+
+if __name__ == "__main__":
+
+    image = cv2.imread("data/dataset/query2/00001.jpg")[..., ::-1]
+    gray_image = transform_color(image, "Gray")
+    mask = cv2.imread("data/dataset/query2/00000.png")
+    mask = mask_background(gray_image, 156)
+    cv2.imshow("2", cv2.resize(image * mask, (500, 500))[..., ::-1])
+    cv2.waitKey(0)

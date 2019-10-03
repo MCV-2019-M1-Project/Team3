@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 from utils import transform_color, mask_background
 
@@ -29,6 +28,4 @@ if __name__ == "__main__":
     mask = cv2.imread("data/dataset/query2/00000.png")
     hist = f_extractor.compute_histogram(gray_image)
     thr = hist.argmax()
-    mask = mask_background(gray_image, thr)
-    cv2.imshow("2", cv2.resize(image * mask, (500, 500))[..., ::-1])
-    cv2.waitKey(0)
+    print(thr)
