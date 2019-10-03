@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 def transform_color(image, color_space):
 
     color_transforms = {
@@ -20,13 +21,11 @@ def transform_color(image, color_space):
     return cv2.cvtColor(image, color_transforms[color_space])
 
 
-def remove_background(image, thr):
+def mask_background(image, thr):
 
     eps = [45]
     for e in eps:
         mask = np.where(
-            (image < (thr + e)) & (image > (thr - e)), 0, image
-        ).astype("uint8")
-        cv2.imshow("eps {}".format(e), cv2.resize(mask, (500, 500)))
+            (image < (thr + e)) & (image > (thr - e)), 0, 1).astype("uint8")
 
-    cv2.waitKey(0)
+    return mask[..., None]
