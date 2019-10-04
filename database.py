@@ -2,15 +2,24 @@ import os
 import cv2
 import pickle 
  
-class Database(object):
+class Database():
+    """ Class to load all datasets to work with,
+
+        
  
+    Args:
+        root_path (str): path with datasets folders
+        has_masks (bool): flag for searching gt masks
+
+    Attributes:
+        prototypes (dict): dictionary with prototype images data
+        query_sets (list): list of dicrtionaries with validation and test sets.
+    
+    """
+
+
     def __init__(self, root_path, has_masks=False):
-        """ TODO
- 
-        Args:
-            root_path: path with datasets folders
-            has_masks: flag for searching gt masks
-        """
+        
         self.prototypes = {}
         self.query_sets = []
 
@@ -22,13 +31,13 @@ class Database(object):
                 files = sorted(os.listdir(path))
                 dataset_name = path.split("/")[-1]
                 dataset_dict = {
-                    'dataset_name': dataset_name,
+                    "dataset_name": dataset_name,
                     }
                 if not files:
                     raise Exception("empty dataset")
                 else:
                     images = [os.path.join(path, x) for x in files if x.endswith(".jpg")]
-                    dataset_dict['file_names'] = images
+                    dataset_dict["file_names"] = images
                     dataset_dict["images"] = self.load_dataset_images(images)
 
                 if "qs" not in dataset_name:
@@ -39,7 +48,7 @@ class Database(object):
                         dataset_dict["masks"] = self.load_dataset_images(masks)
                     gt = [os.path.join(path, x) for x in files if x.endswith(".pkl")][0]
                     with open(gt, "rb") as f:
-                    	dataset_dict['gt'] = pickle.load(f)
+                    	dataset_dict["gt"] = pickle.load(f)
 
                     self.query_sets.append(dataset_dict)
         else:
@@ -51,7 +60,7 @@ class Database(object):
         Args:
             filename: image to be read
  
-        Returns: Matrix with readed image
+        Returns: Matrix with read image
  
         """
         im = cv2.imread(filename)
@@ -59,7 +68,7 @@ class Database(object):
         if im is not None:
             return cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         else:
-            raise ("Error: File {} not found".format(filename))
+            raise FileNotFoundError(" {}" .format(filename))
  
     def load_dataset_images(self, filenames):
         """
@@ -78,12 +87,12 @@ class Database(object):
  
         return ims_dict
  
-    def __str__(self):
-        return "Database:\n \tPrototypes folder: {}\n \tQuery sets: {}".format(self.prototypes.keys(), self.query_sets)
+    def __repr__(self):
+        return "Database:\n \tPrototypes folder: {}\n \tQuery sets: {}".format(self.prototypes.keys(), (qs.keys() for qs in self.query_sets) )
  
  
-if __name__ == '__main__':
+if __name__ == "__main__":
  
     db = Database("data")
- 
-    print(db)
+
+    print(db.prototypes.keys())
