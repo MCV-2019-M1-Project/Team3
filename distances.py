@@ -1,5 +1,5 @@
 import numpy as np
-    
+
 
 def values(hist_dataset, hist_im_query_ini):
     """
@@ -73,7 +73,8 @@ def distance_x2(hist_dataset, hist_im_query):
     """
 
     hist_im_query = values(hist_dataset, hist_im_query)
-    distance = np.sum(np.power((hist_dataset - hist_im_query), 2) / (hist_dataset + hist_im_query), axis=1)
+    eps = 0.000001
+    distance = np.sum(np.power((hist_dataset - hist_im_query), 2) / (hist_dataset + hist_im_query+eps), axis=1)
 
     return distance
 
@@ -119,7 +120,8 @@ def kl_divergence(hist_dataset, hist_im_query):
     """
 
     hist_im_query = values(hist_dataset, hist_im_query)
-    distance = np.sum(hist_im_query*np.log(hist_im_query/hist_dataset), axis = 1)
+    eps = 0.000001
+    distance = np.sum(hist_im_query*np.log((hist_im_query+eps)/(hist_dataset+eps)), axis = 1)
     return distance
 
 
@@ -130,7 +132,8 @@ def shannon_entropy(var):
         var: NxM matrix with N independent data
     Returns: Matrix with N shannon entropies
     """
-    return -np.sum(var*np.log2(var), axis = 1)
+    eps = 0.000001
+    return -np.sum(var*np.log2(var+eps), axis = 1)
 
 
 def js_divergence(hist_dataset, hist_im_query):
@@ -144,7 +147,8 @@ def js_divergence(hist_dataset, hist_im_query):
     """
 
     hist_im_query = values(hist_dataset, hist_im_query)
-    distance = shannon_entropy(1/2*(hist_dataset+hist_im_query))-1/2*(shannon_entropy(hist_dataset)+shannon_entropy(hist_im_query))
+    eps = 0.00001
+    distance = shannon_entropy(1/2*(hist_dataset+hist_im_query)+eps)-1/2*(shannon_entropy(hist_dataset+eps)+shannon_entropy(hist_im_query+eps))
     return distance
 
 
@@ -179,13 +183,11 @@ def calculate_distances(hist_dataset, hist_im_query, mode='euclidean'):
         
 if __name__ == "__main__":
  
-    dist_list = ['euclidean', 'distance_L', 'distance_x2','intersection', 'kl_divergence'
+    dist_list = ['euclidean', 'distance_L', 'distance_x2','intersection', 'kl_divergence',
                  'js_divergence', 'hellinger']
     
-    hist_dataset = np.random.rand((300,256))
+    hist_dataset = np.random.rand(300,256)
     hist_im_query = np.random.rand(256)
     
     for i in dist_list:
         dist_vector = calculate_distances(hist_dataset, hist_im_query, mode = i)
-    
-        
