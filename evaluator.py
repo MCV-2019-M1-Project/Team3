@@ -106,13 +106,14 @@ if __name__ == "__main__":
         print(query_set["dataset_name"], file=open(log, "a"))
         print(query_set["dataset_name"])
         has_masks = bool(query_set["masks"])
-        print(evaluator.evaluate_query_set(query_set, has_masks, args.dist))
         print(
-            evaluator.evaluate_query_set(query_set, has_masks, args.dist),
+            "mapk: {:.4f}".format(
+                evaluator.evaluate_query_set(query_set, has_masks, args.dist)
+            )
+        )
+        print(
+            "mapk: {:.4f}".format(
+                evaluator.evaluate_query_set(query_set, has_masks, args.dist)
+            ),
             file=open(log, "a"),
         )
-    # print({k: np.array(v).mean() for k, v in evaluator.metrics.items()})
-    # print(
-    #     {k: np.array(v).mean() for k, v in evaluator.metrics.items()},
-    #     file=open(log, "a"),
-    # )
