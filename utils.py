@@ -45,7 +45,6 @@ def estimate_background(img, ratios=[0.1, 0.15, 0.20]):
         mean_bgn = np.append(mean_bgn, img.mean(0))
 
     mean_bgn = mean_bgn.reshape(-1, img.shape[-1]).mean(0)
-    import ipdb; ipdb.set_trace()  # BREAKPOINT
 
     return mean_bgn
 
@@ -54,16 +53,16 @@ def mask_background(img, mean_bgn):
     """Removes background from an image given the mean background pixel value
 
     Attempts to remove the background from an image by computing the distance of
-    every pixel with the mean background pixel value and thresholding the closests
-    pixels
+    every pixel with the mean background pixel value and thresholding the
+    closests pixels
 
     Args:
         img (numpy.array): input image
         mean_bgn (numpy.array): the mean pixel value of the background
 
     Returns:
-        The image with the background pixels in black and the mask used to separate
-        foreground from background
+        The image with the background pixels in black and the mask used to
+        separate foreground from background
     """
 
     pixel_norm = np.linalg.norm(img, axis=2)

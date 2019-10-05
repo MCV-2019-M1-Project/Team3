@@ -35,7 +35,6 @@ class FeatureExtractor:
         # Add small epsilon to avoid division by 0 afterwards
         return hist + 1e-05
 
-
 if __name__ == "__main__":
 
     dataset = Database("data/dataset/", has_masks=True)
