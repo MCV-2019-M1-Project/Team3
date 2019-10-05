@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
+import pickle
 
 
 def transform_color(image, color_space):
-
     color_transforms = {
         "HSV": cv2.COLOR_RGB2HSV,
         "LAB": cv2.COLOR_RGB2LAB,
@@ -40,12 +40,13 @@ def estimate_background(img, ratios=[0.1, 0.15, 0.20]):
     for ratio in ratios:
         border = int(img.shape[0] * ratio), int(img.shape[1] * ratio)
         mask = np.ones_like(img).astype("bool")
-        mask[border[0] : -border[0], border[1] : -border[1]] = 0
+        mask[border[0]: -border[0], border[1]: -border[1]] = 0
         img = np.where(mask == 0, 0, img).reshape(-1, img.shape[-1])
         mean_bgn = np.append(mean_bgn, img.mean(0))
 
     mean_bgn = mean_bgn.reshape(-1, img.shape[-1]).mean(0)
-    import ipdb; ipdb.set_trace()  # BREAKPOINT
+    import ipdb;
+    ipdb.set_trace()  # BREAKPOINT
 
     return mean_bgn
 
@@ -79,8 +80,22 @@ def mask_background(img, mean_bgn):
     return img, mask
 
 
-if __name__ == "__main__":
+def save_to_disk(obj, filename):
+    """
+    Method to save to disk any object using pickle
 
+    Args:
+        obj (obj): object to save
+        filename (str): relative path to save dir
+
+    Returns:
+        None
+    """
+    with open(filename, "wb") as f:
+        pickle.dump(obj, f)
+
+
+if __name__ == "__main__":
     image = cv2.imread("data/dataset/query2/00001.jpg")[..., ::-1]
     gray_image = transform_color(image, "Gray")
     mask = mask_background(gray_image, 156)

@@ -17,7 +17,7 @@ class Evaluator:
     def calc_FV_protoypes(self):
         fvs = np.array([])
         for file, im in self.prototypes['images'].items():
-            histogram = self.feature_extractor.compute_histogram(im)[...,None]
+            histogram = self.feature_extractor.compute_histogram(im)[..., None]
             fvs = np.append(fvs, histogram)
         return fvs.reshape(-1, 1000)
 
@@ -35,6 +35,7 @@ class Evaluator:
                 mean_bgn = estimate_background(im, ratios=[0.1, 0.2, 0.3, 0.4])
                 im, mask = mask_background(im, mean_bgn)
                 self.save_mask_file(file, mask)
+
 
             fv = self.calc_FV_query(im, mask)
             distances = calculate_distances(self.feature_vector_protoypes, fv, distance_eq)
@@ -56,13 +57,10 @@ class Evaluator:
 if __name__ == '__main__':
 
     db = Database("data")
-    print(db)
     evaluator = Evaluator(db.prototypes, "")
-    print(evaluator)
 
-    print("aaa")
     dist_list = ['euclidean', 'distance_L', 'distance_x2', 'intersection', 'kl_divergence',
                  'js_divergence', 'hellinger']
     for query_set in db.query_sets:
         has_masks = True if 'masks' in query_set else False
-        print(evaluator.evaluate_query_set(query_set, has_masks,dist_list[0]))
+        print(evaluator.evaluate_query_set(query_set, has_masks, dist_list[0]))
