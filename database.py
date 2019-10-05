@@ -1,7 +1,9 @@
 import os
+import pickle
+
 import cv2
-import pickle 
- 
+
+
 class Database():
     """ Class to load all datasets to work with,
 
@@ -15,9 +17,8 @@ class Database():
 
     """
 
+    def __init__(self, root_path):
 
-    def __init__(self, root_path, has_masks=False):
-        
         self.prototypes = {}
         self.query_sets = []
 
@@ -31,7 +32,7 @@ class Database():
 
                 dataset_dict = {
                     "dataset_name": dataset_name,
-                    }
+                }
                 if not files:
                     raise Exception("empty dataset")
                 else:
@@ -42,18 +43,17 @@ class Database():
                 if "qs" not in dataset_name:
                     self.prototypes = dataset_dict
                 else:
-                    if has_masks:
-
-                        masks = [os.path.join(path, x) for x in files if x.endswith(".png")]
+                    masks = [os.path.join(path, x) for x in files if x.endswith(".png")]
+                    if masks:
                         dataset_dict["masks"] = self.load_dataset_images(masks)
                     gt = [os.path.join(path, x) for x in files if x.endswith(".pkl")][0]
                     with open(gt, "rb") as f:
-                    	dataset_dict["gt"] = pickle.load(f)
+                        dataset_dict["gt"] = pickle.load(f)
 
                     self.query_sets.append(dataset_dict)
         else:
             raise Exception("root path not found")
-        
+
     def load_image(self, filename):
         """
             Method that read an image from file and converts to RGB space
@@ -64,12 +64,12 @@ class Database():
  
         """
         im = cv2.imread(filename)
- 
+
         if im is not None:
             return cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         else:
-            raise FileNotFoundError(" {}" .format(filename))
- 
+            raise FileNotFoundError(" {}".format(filename))
+
     def load_dataset_images(self, filenames):
         """
         Function that loads all images and stores on a dictionary
@@ -81,18 +81,18 @@ class Database():
  
         """
         ims_dict = {}
- 
+
         for im in filenames:
             ims_dict[im] = self.load_image(im)
- 
+
         return ims_dict
- 
+
     def __repr__(self):
-        return "Database:\n \tPrototypes folder: {}\n \tQuery sets: {}".format(self.prototypes.keys(), (qs.keys() for qs in self.query_sets) )
- 
- 
+        return "Database:\n \tPrototypes folder: {}\n \tQuery sets: {}".format(self.prototypes.keys(),
+                                                                               (qs.keys() for qs in self.query_sets))
+
+
 if __name__ == "__main__":
- 
     db = Database("data")
 
     print(db.prototypes.keys())

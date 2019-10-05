@@ -45,8 +45,6 @@ def estimate_background(img, ratios=[0.1, 0.15, 0.20]):
         mean_bgn = np.append(mean_bgn, img.mean(0))
 
     mean_bgn = mean_bgn.reshape(-1, img.shape[-1]).mean(0)
-    import ipdb;
-    ipdb.set_trace()  # BREAKPOINT
 
     return mean_bgn
 

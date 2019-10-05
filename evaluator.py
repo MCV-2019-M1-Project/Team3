@@ -5,6 +5,7 @@ from utils import mask_background, estimate_background
 from metrics import mapk, minimun_index_list
 import numpy as np
 import cv2
+import os
 
 
 class Evaluator:
@@ -13,6 +14,7 @@ class Evaluator:
         self.prototypes = prototype_dict
         self.feature_extractor = FeatureExtractor(None)
         self.feature_vector_protoypes = self.calc_FV_protoypes()
+        self.output_folder = output_folder
 
     def calc_FV_protoypes(self):
         fvs = np.array([])
@@ -32,10 +34,10 @@ class Evaluator:
 
             mask = None
             if has_masks:
+                mask_filename = os.path.join(self.output_folder, file.split("/")[-1].split(".")[0] + ".png")
                 mean_bgn = estimate_background(im, ratios=[0.1, 0.2, 0.3, 0.4])
                 im, mask = mask_background(im, mean_bgn)
-                self.save_mask_file(file, mask)
-
+                self.save_mask_file(mask_filename, mask)
 
             fv = self.calc_FV_query(im, mask)
             distances = calculate_distances(self.feature_vector_protoypes, fv, distance_eq)
@@ -61,6 +63,9 @@ if __name__ == '__main__':
 
     dist_list = ['euclidean', 'distance_L', 'distance_x2', 'intersection', 'kl_divergence',
                  'js_divergence', 'hellinger']
-    for query_set in db.query_sets:
-        has_masks = True if 'masks' in query_set else False
-        print(evaluator.evaluate_query_set(query_set, has_masks, dist_list[0]))
+    for dist in dist_list:
+        print(dist)
+        for query_set in db.query_sets:
+            print(query_set['dataset_name'])
+            has_masks = True if 'masks' in query_set else False
+            print(evaluator.evaluate_query_set(query_set, has_masks, dist))
