@@ -5,8 +5,6 @@ import pickle
 class Database():
     """ Class to load all datasets to work with,
 
-        
- 
     Args:
         root_path (str): path with datasets folders
         has_masks (bool): flag for searching gt masks
@@ -14,7 +12,7 @@ class Database():
     Attributes:
         prototypes (dict): dictionary with prototype images data
         query_sets (list): list of dicrtionaries with validation and test sets.
-    
+
     """
 
 
@@ -25,11 +23,12 @@ class Database():
 
         if os.path.exists(root_path):
             self.datasets = []
- 
+
             for path in os.listdir(root_path):
                 path = os.path.join(root_path, path)
                 files = sorted(os.listdir(path))
                 dataset_name = path.split("/")[-1]
+
                 dataset_dict = {
                     "dataset_name": dataset_name,
                     }
@@ -44,6 +43,7 @@ class Database():
                     self.prototypes = dataset_dict
                 else:
                     if has_masks:
+
                         masks = [os.path.join(path, x) for x in files if x.endswith(".png")]
                         dataset_dict["masks"] = self.load_dataset_images(masks)
                     gt = [os.path.join(path, x) for x in files if x.endswith(".pkl")][0]
@@ -53,7 +53,7 @@ class Database():
                     self.query_sets.append(dataset_dict)
         else:
             raise Exception("root path not found")
- 
+        
     def load_image(self, filename):
         """
             Method that read an image from file and converts to RGB space
