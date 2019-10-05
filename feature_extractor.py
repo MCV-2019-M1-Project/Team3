@@ -32,8 +32,8 @@ class FeatureExtractor:
 
         hist = np.histogram(img[mask], bins=1000, density=True)[0]
 
-        # Add 1 to avoid division by 0 afterwards
-        return hist + 1
+        # Add small epsilon to avoid division by 0 afterwards
+        return hist + 1e-05
 
 
 if __name__ == "__main__":
