@@ -3,12 +3,21 @@ import numpy as np
 
 
 def transform_color(image, color_space):
+    """Transforms an image rgb image to another color space
+
+    Args:
+        image (numpy.array): input rgb image
+        color_space (string): desired color_space, e.g: HSV
+    """
 
     color_transforms = {
         "HSV": cv2.COLOR_RGB2HSV,
         "LAB": cv2.COLOR_RGB2LAB,
         "YCbCr": cv2.COLOR_RGB2YCrCb,
         "Gray": cv2.COLOR_RGB2GRAY,
+        "XYZ": cv2.COLOR_RGB2XYZ,
+        "HLS": cv2.COLOR_RGB2HLS,
+        "Luv": cv2.COLOR_RGB2Luv,
     }
 
     if color_space not in color_transforms:

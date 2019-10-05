@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from database import Database
+from data.database import Database
 from utils import mask_background, estimate_background
 
 
@@ -16,11 +16,13 @@ class FeatureExtractor:
         self.dataset = dataset
 
     @staticmethod
-    def compute_histogram(img, mask=None):
+    def compute_histogram(img, bins=1000, mask=None, sqrt=False):
         """Computes the normalized density histogram of a given array
 
         Args:
             img (numpy.array): array of which to compute the histogram
+            bins (int, optional): number of bins for histogram
+            sqrt (int, optional): whether to square root the computed histogram
             mask (numpy.array, optional): mask to apply to the input array
 
         Returns:
@@ -30,10 +32,9 @@ class FeatureExtractor:
         if mask is not None:
             mask = mask.astype("bool")
 
-        hist = np.histogram(img[mask], bins=1000, density=True)[0]
+        hist = np.histogram(img[mask], bins=bins, density=True)[0]
 
-        # Add small epsilon to avoid division by 0 afterwards
-        return hist + 1e-05
+        return np.sqrt(hist) if sqrt else hist
 
 if __name__ == "__main__":
 
