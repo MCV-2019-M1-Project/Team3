@@ -16,13 +16,16 @@ class FeatureExtractor:
         self.dataset = dataset
 
     @staticmethod
-    def compute_histogram(img, bins=1000, mask=None, sqrt=False):
+    def compute_histogram(img, bins=1000, mask=None, sqrt=False, concat=False):
         """Computes the normalized density histogram of a given array
 
         Args:
             img (numpy.array): array of which to compute the histogram
             bins (int, optional): number of bins for histogram
-            sqrt (int, optional): whether to square root the computed histogram
+            sqrt (bool, optional): whether to square root the computed histogram
+            concat (bool, optional): whether to compute and concatenate per a
+                                     channel histogram
+
             mask (numpy.array, optional): mask to apply to the input array
 
         Returns:
@@ -32,9 +35,24 @@ class FeatureExtractor:
         if mask is not None:
             mask = mask.astype("bool")
 
-        hist = np.histogram(img[mask], bins=bins, density=True)[0]
+        if concat:
+            if img.shape[2] == 3:
+                hist = np.array(
+                    [
+                        np.histogram(
+                            img[..., i][mask], bins=bins, density=True
+                        )[0]
+                        for i in range(3)
+                    ]
+                )
+                hist = hist.ravel()
+            else:
+                raise Exception("Image should have more channels")
+        else:
+            hist = np.histogram(img[mask], bins=bins, density=True)[0]
 
         return np.sqrt(hist) if sqrt else hist
+
 
 if __name__ == "__main__":
 

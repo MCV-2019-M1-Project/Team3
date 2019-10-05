@@ -1,5 +1,27 @@
+import os
 import cv2
+import pickle
+import errno
 import numpy as np
+
+
+def mkdir(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+
+def save_predictions(file_name, predictions):
+
+    with open(file_name, "wb") as f:
+        pickle.dump(predictions, f)
+
+
+def save_mask(file_name, mask):
+    if not cv2.imwrite(file_name, mask):
+        raise Exception("Can't write to disk")
 
 
 def transform_color(image, color_space):
@@ -85,12 +107,3 @@ def mask_background(img, mean_bgn):
     mask = mask * 255
 
     return img, mask
-
-
-if __name__ == "__main__":
-
-    image = cv2.imread("data/dataset/query2/00001.jpg")[..., ::-1]
-    gray_image = transform_color(image, "Gray")
-    mask = mask_background(gray_image, 156)
-    cv2.imshow("2", cv2.resize(image * mask, (500, 500))[..., ::-1])
-    cv2.waitKey(0)
