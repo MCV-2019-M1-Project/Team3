@@ -1,11 +1,5 @@
 import numpy as np
 
-import pickle
-
-
-def minimun_index_list(elements, k=10):
-    return elements.argsort()[:k].tolist()
-
 
 def apk(actual, predicted, k=10):
     """
@@ -15,7 +9,7 @@ def apk(actual, predicted, k=10):
     Parameters
     ----------
     actual : list
-             A list of elements that are to be predicted (order doesn't matter)
+                A list of elements that are to be predicted (order doesn't matter)
     predicted : list
                 A list of predicted elements (order does matter)
     k : int, optional
@@ -35,7 +29,6 @@ def apk(actual, predicted, k=10):
         if p in actual and p not in predicted[:i]:
             num_hits += 1.0
             score += num_hits / (i + 1.0)
-
     if not actual:
         return 0.0
 
@@ -43,6 +36,7 @@ def apk(actual, predicted, k=10):
 
 
 def mapk(actual, predicted, k=10):
+
     """
     Computes the mean average precision at k.
     This function computes the mean average prescision at k between two lists
@@ -63,29 +57,3 @@ def mapk(actual, predicted, k=10):
             The mean average precision at k over the input lists
     """
     return np.mean([apk(a, p, k) for a, p in zip(actual, predicted)])
-
-
-def main():
-    k = 10
-    # /--- Test ---
-    Array = np.random.randint(0, 255, 50)
-    list = Array.tolist()
-    print(list)
-    # --- Test ---/
-
-    actual_apk = [26]  # GroundTruth
-    predicted_apk = minimun_index_list(list, k)  # 10 minimum indexes
-    print(predicted_apk)
-    score_apk = apk(actual_apk, predicted_apk)
-    print(score_apk)
-
-    gt = open("gt_corresps.pkl", "rb")
-    actual_mapk = pickle.load(gt)  # GT pickle
-    print(actual_mapk)
-    predicted_mapk = [[1, 1], [10, 10]]  # List of lists with 10 minimum indexes by image
-    score_mapk = mapk(actual_mapk, predicted_mapk)
-    print(score_mapk)
-
-
-if __name__ == '__main__':
-    main()
