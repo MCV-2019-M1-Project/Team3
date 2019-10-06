@@ -52,58 +52,25 @@ def transform_color(image, color_space):
     return cv2.cvtColor(image, color_transforms[color_space])
 
 
-def estimate_background(img, ratios=[0.1, 0.15, 0.20]):
-    """Estimates the mean pixel value of an image background
-
-    Attempts to compute the mean background pixel value by taking different
-    ratios of the edges of the image and averaging them together
-
-    Args:
-        img (numpy.array): input image
-        ratios (list, optional): The percentage of the image you want to
-        crop from the edges
-
-    Returns:
-        Array containing the mean background pixel value
-    """
-
-    mean_bgn = np.array([])
-    for ratio in ratios:
-        border = int(img.shape[0] * ratio), int(img.shape[1] * ratio)
-        mask = np.ones_like(img).astype("bool")
-        mask[border[0] : -border[0], border[1] : -border[1]] = 0
-        img = np.where(mask == 0, 0, img).reshape(-1, img.shape[-1])
-        mean_bgn = np.append(mean_bgn, img.mean(0))
-
-    mean_bgn = mean_bgn.reshape(-1, img.shape[-1]).mean(0)
-
-    return mean_bgn
-
-
-def mask_background(img, mean_bgn):
+def mask_background(img):
     """Removes background from an image given the mean background pixel value
-
     Attempts to remove the background from an image by computing the distance of
     every pixel with the mean background pixel value and thresholding the
     closests pixels
-
     Args:
         img (numpy.array): input image
-        mean_bgn (numpy.array): the mean pixel value of the background
-
     Returns:
         The image with the background pixels in black and the mask used to
         separate foreground from background
     """
 
-    pixel_norm = np.linalg.norm(img, axis=2) if len(img.shape) == 3 else img 
+    thr1 = np.abs(img - img[10, 10]).sum(2)
+    thr2 = np.abs(img - img[-10, -10]).sum(2)
+    thr3 = np.abs(img - img[10, -10]).sum(2)
+    thr4 = np.abs(img - img[-10, 10]).sum(2)
+    thr = np.dstack((thr1, thr2, thr3, thr4)).min(2)
 
-    bgn_norm = np.linalg.norm(mean_bgn)
-    low_thr = bgn_norm - 105
-    high_thr = bgn_norm + 105
-    mask = np.where(
-        (pixel_norm > (high_thr)) | (pixel_norm < (low_thr)), 0, 1
-    ).astype("uint8")
+    mask = np.where(thr > 90, 1, 0).astype("uint8")
     mask = mask * 255
 
     return img, mask

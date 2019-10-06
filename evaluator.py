@@ -8,7 +8,7 @@ from distances import calculate_distances
 from opt import parse_args
 from data.database import Database
 from feature_extractor import FeatureExtractor
-from utils import mask_background, estimate_background
+from utils import mask_background
 from utils import save_mask, save_predictions, mkdir
 from metrics import mapk
 
@@ -58,10 +58,9 @@ class Evaluator:
                     self.output_folder,
                     file.split("/")[-1].split(".")[0] + ".png",
                 )
-                mean_bgn = estimate_background(im, ratios=[0.1, 0.2, 0.3])
-                im, mask = mask_background(im, mean_bgn)
+                im, mask = mask_background(im)
                 gt_mask = query_set_dict["masks"][file.replace("jpg", "png")]
-                # self.calc_mask_metrics(gt_mask[..., 0] / 255, mask / 255)
+                self.calc_mask_metrics(gt_mask[..., 0] / 255, mask / 255)
                 if self.opt.save:
                     save_mask(mask_filename, mask)
 
@@ -122,3 +121,4 @@ if __name__ == "__main__":
             ),
             file=open(log, "a"),
         )
+        print({k:np.mean(v) for k, v in evaluator.metrics.items()})
