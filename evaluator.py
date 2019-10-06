@@ -1,54 +1,77 @@
+import os
+
+import numpy as np
+
+from sklearn.metrics import recall_score, precision_score, f1_score
+
 from distances import calculate_distances
-from database import Database
+from opt import parse_args
+from data.database import Database
 from feature_extractor import FeatureExtractor
 from utils import mask_background, estimate_background
-from metrics import mapk, minimun_index_list
-import numpy as np
-import cv2
-import os
+from utils import save_mask, save_predictions, mkdir
+from metrics import mapk
 
 
 class Evaluator:
-
-    def __init__(self, prototype_dict, output_folder):
+    def __init__(self, prototype_dict, output_folder, opt):
         self.prototypes = prototype_dict
+        self.opt = opt
         self.feature_extractor = FeatureExtractor(None)
         self.feature_vector_protoypes = self.calc_FV_protoypes()
         self.output_folder = output_folder
+        self.metrics = {"precision": [], "recall": [], "f1": []}
 
-    def calc_FV_protoypes(self):
+    def calc_FV_protoypes(self, mask=None):
         fvs = np.array([])
-        for file, im in self.prototypes['images'].items():
-            histogram = self.feature_extractor.compute_histogram(im)[..., None]
+        bins = self.opt.bins * 3 if self.opt.concat else self.opt.bins
+        for file, im in self.prototypes["images"].items():
+            histogram = self.feature_extractor.compute_histogram(
+                im,
+                bins=self.opt.bins,
+                mask=mask,
+                sqrt=self.opt.sqrt,
+                concat=self.opt.concat,
+            )[..., None]
             fvs = np.append(fvs, histogram)
-        return fvs.reshape(-1, 1000)
+
+        return fvs.reshape(-1, bins)
 
     def calc_FV_query(self, im, mask=None):
-        return self.feature_extractor.compute_histogram(im, mask=mask)
+        return self.feature_extractor.compute_histogram(
+            im,
+            bins=self.opt.bins,
+            mask=mask,
+            sqrt=self.opt.sqrt,
+            concat=self.opt.concat,
+        )
 
     def evaluate_query_set(self, query_set_dict, has_masks, distance_eq):
-        gt = query_set_dict['gt']
+        gt = query_set_dict["gt"]
         predictions = []
 
-        for file, im in query_set_dict['images'].items():
+        for file, im in query_set_dict["images"].items():
 
             mask = None
             if has_masks:
-                mask_filename = os.path.join(self.output_folder, file.split("/")[-1].split(".")[0] + ".png")
-                mean_bgn = estimate_background(im, ratios=[0.1, 0.2, 0.3, 0.4])
+                mask_filename = os.path.join(
+                    self.output_folder,
+                    file.split("/")[-1].split(".")[0] + ".png",
+                )
+                mean_bgn = estimate_background(im, ratios=[0.1, 0.2, 0.3])
                 im, mask = mask_background(im, mean_bgn)
-                self.save_mask_file(mask_filename, mask)
+                gt_mask = query_set_dict["masks"][file.replace("jpg", "png")]
+                # self.calc_mask_metrics(gt_mask[..., 0] / 255, mask / 255)
+                if self.opt.save:
+                    save_mask(mask_filename, mask)
 
             fv = self.calc_FV_query(im, mask)
-            distances = calculate_distances(self.feature_vector_protoypes, fv, distance_eq)
+            distances = calculate_distances(
+                self.feature_vector_protoypes, fv, distance_eq
+            )
 
-            predictions.append(minimun_index_list(distances))
+            predictions.append(list(distances.argsort()[:10]))
 
-<<<<<<< HEAD
-        map = mapk(gt, predictions)
-
-        return map
-=======
         if self.opt.save:
             save_predictions(
                 os.path.join(
@@ -59,31 +82,11 @@ class Evaluator:
             )
 
         map_k = mapk(gt, predictions)
->>>>>>> upstream/master
 
-    def save_mask_file(self, file_name, mask):
-        if not cv2.imwrite(file_name, mask):
-            raise Exception("Can't write to disk")
+        return map_k
 
     def calc_mask_metrics(self, gt_mask, pred_mask):
-        pass
 
-
-if __name__ == '__main__':
-
-    db = Database("data")
-    evaluator = Evaluator(db.prototypes, "")
-
-<<<<<<< HEAD
-    dist_list = ['euclidean', 'distance_L', 'distance_x2', 'intersection', 'kl_divergence',
-                 'js_divergence', 'hellinger']
-    for dist in dist_list:
-        print(dist)
-        for query_set in db.query_sets:
-            print(query_set['dataset_name'])
-            has_masks = True if 'masks' in query_set else False
-            print(evaluator.evaluate_query_set(query_set, has_masks, dist))
-=======
         gt_mask = gt_mask.ravel()
         pred_mask = pred_mask.ravel()
         self.metrics["recall"].append(recall_score(gt_mask, pred_mask))
@@ -118,4 +121,3 @@ if __name__ == "__main__":
             ),
             file=open(log, "a"),
         )
->>>>>>> upstream/master
