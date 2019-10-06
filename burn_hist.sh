@@ -7,7 +7,7 @@ for d in "euclidean" "distance_L" "distance_x2" "intersection" "kl_divergence" "
             for s in "--sqrt" ""; do
                 for con in "--concat" ""; do
                     python3 evaluator.py data/dataset --dist $d --color $c $s $con \
-                        --bins $b --output output/${d}_${c}_${s}_${con}_${b}
+                        --bins $b --output output/${d}_${c}_${s}_${con}_${b} --save
                 done
             done
         done

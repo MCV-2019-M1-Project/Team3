@@ -94,7 +94,7 @@ def intersection(hist_dataset, hist_im_query):
     """
 
     hist_im_query = values(hist_dataset, hist_im_query)
-    distance = np.sum(np.minimum(hist_dataset, hist_im_query), axis=1)
+    distance = 1/(np.sum(np.minimum(hist_dataset, hist_im_query), axis=1))
     return distance
 
 
@@ -109,7 +109,7 @@ def hellinger(hist_dataset, hist_im_query):
     """
 
     hist_im_query = values(hist_dataset, hist_im_query)
-    distance = np.sum(np.sqrt(hist_dataset * hist_im_query), axis=1)
+    distance = 1/(np.sum(np.sqrt(hist_dataset * hist_im_query), axis=1))
     return distance
 
 

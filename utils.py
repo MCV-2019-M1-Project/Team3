@@ -96,7 +96,7 @@ def mask_background(img, mean_bgn):
         separate foreground from background
     """
 
-    pixel_norm = np.linalg.norm(img, axis=2)
+    pixel_norm = np.linalg.norm(img, axis=2) if len(img.shape) == 3 else img 
 
     bgn_norm = np.linalg.norm(mean_bgn)
     low_thr = bgn_norm - 105
