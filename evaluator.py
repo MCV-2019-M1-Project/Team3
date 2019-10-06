@@ -9,7 +9,7 @@ from opt import parse_args
 from data.database import Database
 from feature_extractor import FeatureExtractor
 from utils import mask_background, estimate_background
-from utils import save_mask, save_predictions, mkdir
+from utils import save_mask, save_predictions, mkdir, plot_histogram
 from metrics import mapk
 
 
@@ -33,6 +33,7 @@ class Evaluator:
                 sqrt=self.opt.sqrt,
                 concat=self.opt.concat,
             )[..., None]
+            plot_histogram(histogram)
             fvs = np.append(fvs, histogram)
 
         return fvs.reshape(-1, bins)
@@ -102,7 +103,7 @@ if __name__ == "__main__":
 
     mkdir(args.output)
 
-    db = Database(args.root_folder, has_masks=True)
+    db = Database(args.root_folder, has_masks=True, color_space=args.color)
     evaluator = Evaluator(db.prototypes, args.output, args)
     log = os.path.join(args.output, "log.txt")
 

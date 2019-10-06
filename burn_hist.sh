@@ -6,8 +6,8 @@ for d in "euclidean" "distance_L" "distance_x2" "intersection" "kl_divergence" "
         for b in 100 200 400 800 1000 1200 1300 1500 1600 2000; do
             for s in "--sqrt" ""; do
                 for con in "--concat" ""; do
-                    python3 evaluator.py data/dataset --dist $d --color $c --sqrt $s --concat $con\
-                        --output output/${d}_${c}_${s}_${con}_${b}
+                    python3 evaluator.py data/dataset --dist $d --color $c $s $con\
+                        --bins $b --output output/${d}_${c}_${s}_${con}_${b}
                 done
             done
         done

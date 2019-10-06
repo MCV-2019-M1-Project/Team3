@@ -3,7 +3,7 @@ import cv2
 import pickle
 import errno
 import numpy as np
-
+from matplotlib import pyplot as plt
 
 def mkdir(path):
     try:
@@ -107,3 +107,9 @@ def mask_background(img, mean_bgn):
     mask = mask * 255
 
     return img, mask
+
+
+def plot_histogram(histogram):
+
+    plt.plot(histogram)
+    plt.show()
