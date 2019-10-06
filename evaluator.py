@@ -72,7 +72,6 @@ class Evaluator:
 
             predictions.append(list(distances.argsort()[:10]))
 
-        map_k = mapk(gt, predictions)
         if self.opt.save:
             save_predictions(
                 os.path.join(
@@ -82,7 +81,7 @@ class Evaluator:
                 predictions,
             )
 
-        self.metrics["mapk"] = map_k
+        map_k = mapk(gt, predictions)
 
         return map_k
 
@@ -99,6 +98,7 @@ if __name__ == "__main__":
 
     args = parse_args()
     state = args.__dict__
+    print(state)
 
     mkdir(args.output)
 
