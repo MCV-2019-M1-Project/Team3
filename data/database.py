@@ -1,6 +1,7 @@
 import os
 import cv2
 import pickle
+from utils import  transform_color
 
 class Database():
     """ Class to load all datasets to work with,
@@ -16,10 +17,11 @@ class Database():
     """
 
 
-    def __init__(self, root_path, has_masks=False):
+    def __init__(self, root_path, has_masks=False, color_space=None):
 
         self.prototypes = {}
         self.query_sets = []
+        self.color_space = color_space
 
         if os.path.exists(root_path):
             self.datasets = []
@@ -66,6 +68,8 @@ class Database():
         im = cv2.imread(filename)
 
         if im is not None:
+            if self.color_space is not None:
+                return transform_color(im, self.color_space)
             return cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         else:
             raise FileNotFoundError(" {}" .format(filename))
