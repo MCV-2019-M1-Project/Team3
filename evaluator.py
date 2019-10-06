@@ -75,7 +75,11 @@ class Evaluator:
         map_k = mapk(gt, predictions)
         if self.opt.save:
             save_predictions(
-                os.path.join(self.output_folder, "result.pkl"), predictions
+                os.path.join(
+                    self.output_folder,
+                    "result_{}.pkl".format(int(has_masks) + 1),
+                ),
+                predictions,
             )
 
         self.metrics["mapk"] = map_k
