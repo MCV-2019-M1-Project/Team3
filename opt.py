@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument(
         "--color",
         type=str,
-        default="HSV",
+        default=None,
         help="color space to use",
         choices=["HSV", "LAB", "Gray", "XYZ", "HLS", "Luv", "YCbCr"],
     )

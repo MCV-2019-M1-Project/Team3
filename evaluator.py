@@ -24,7 +24,7 @@ class Evaluator:
 
     def calc_FV_protoypes(self, mask=None):
         fvs = np.array([])
-        bins = self.opt.bins * 3 if self.opt.concat else self.opt.bins
+        bins = self.opt.bins * 3 if self.opt.concat and self.opt.color != "Gray" else self.opt.bins
         for file, im in self.prototypes["images"].items():
             histogram = self.feature_extractor.compute_histogram(
                 im,
@@ -101,13 +101,14 @@ if __name__ == "__main__":
 
     mkdir(args.output)
 
-    db = Database(args.root_folder, has_masks=True)
+    db = Database(args.root_folder, has_masks=True, color_space=args.color)
     evaluator = Evaluator(db.prototypes, args.output, args)
     log = os.path.join(args.output, "log.txt")
 
     for query_set in db.query_sets:
         print(query_set["dataset_name"], file=open(log, "a"))
         print(query_set["dataset_name"])
+        print(args.color)
         has_masks = bool(query_set["masks"])
         print(
             "mapk: {:.4f}".format(

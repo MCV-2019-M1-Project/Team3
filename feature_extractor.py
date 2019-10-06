@@ -34,20 +34,23 @@ class FeatureExtractor:
 
         if mask is not None:
             mask = mask.astype("bool")
-
-        if concat:
-            if img.shape[2] == 3:
-                hist = np.array(
-                    [
-                        np.histogram(
-                            img[..., i][mask], bins=bins, density=True
-                        )[0]
-                        for i in range(3)
-                    ]
-                )
-                hist = hist.ravel()
+        
+        if len(img.shape) == 3:
+            if concat:
+                if img.shape[2] == 3:
+                    hist = np.array(
+                        [
+                            np.histogram(
+                                img[..., i][mask], bins=bins, density=True
+                            )[0]
+                            for i in range(3)
+                        ]
+                    )
+                    hist = hist.ravel()
+                else:
+                    raise Exception("Image should have more channels")
             else:
-                raise Exception("Image should have more channels")
+            	hist = np.histogram(img[mask], bins=bins, density=True)[0]
         else:
             hist = np.histogram(img[mask], bins=bins, density=True)[0]
 

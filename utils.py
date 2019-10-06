@@ -70,7 +70,6 @@ def mask_background(img):
     thr4 = np.abs(img - img[-10, 10]).sum(2)
     thr = np.dstack((thr1, thr2, thr3, thr4)).min(2)
 
-
     mask = np.where(thr > 90, 1, 0).astype("uint8")
     mask = mask * 255
 
