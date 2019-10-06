@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from data.database import Database
-from utils import mask_background, estimate_background
+from utils import mask_background
 
 
 class FeatureExtractor:
@@ -59,8 +59,7 @@ if __name__ == "__main__":
     dataset = Database("data/dataset/", has_masks=True)
     f_extractor = FeatureExtractor(dataset)
     for img in dataset.query_sets[1]["images"].values():
-        mean_bgn = estimate_background(img, ratios=[0.1, 0.2, 0.3, 0.4])
-        img, mask = mask_background(img, mean_bgn)
+        img, mask = mask_background(img)
         img_hist = f_extractor.compute_histogram(img, mask=(img != 0))
         plt.plot(img_hist)
         plt.show()
