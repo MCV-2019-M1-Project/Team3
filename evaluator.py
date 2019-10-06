@@ -24,7 +24,7 @@ class Evaluator:
 
     def calc_FV_protoypes(self, mask=None):
         fvs = np.array([])
-        bins = self.opt.bins * 3 if self.opt.concat else self.opt.bins
+        bins = self.opt.bins * 3 if self.opt.concat and self.opt.color != "Gray" else self.opt.bins
         for file, im in self.prototypes["images"].items():
             histogram = self.feature_extractor.compute_histogram(
                 im,
