@@ -44,9 +44,22 @@ class Evaluator:
 
             predictions.append(minimun_index_list(distances))
 
+<<<<<<< HEAD
         map = mapk(gt, predictions)
 
         return map
+=======
+        if self.opt.save:
+            save_predictions(
+                os.path.join(
+                    self.output_folder,
+                    "result_{}.pkl".format(int(has_masks) + 1),
+                ),
+                predictions,
+            )
+
+        map_k = mapk(gt, predictions)
+>>>>>>> upstream/master
 
     def save_mask_file(self, file_name, mask):
         if not cv2.imwrite(file_name, mask):
@@ -61,6 +74,7 @@ if __name__ == '__main__':
     db = Database("data")
     evaluator = Evaluator(db.prototypes, "")
 
+<<<<<<< HEAD
     dist_list = ['euclidean', 'distance_L', 'distance_x2', 'intersection', 'kl_divergence',
                  'js_divergence', 'hellinger']
     for dist in dist_list:
@@ -69,3 +83,39 @@ if __name__ == '__main__':
             print(query_set['dataset_name'])
             has_masks = True if 'masks' in query_set else False
             print(evaluator.evaluate_query_set(query_set, has_masks, dist))
+=======
+        gt_mask = gt_mask.ravel()
+        pred_mask = pred_mask.ravel()
+        self.metrics["recall"].append(recall_score(gt_mask, pred_mask))
+        self.metrics["precision"].append(precision_score(gt_mask, pred_mask))
+        self.metrics["f1"].append(f1_score(gt_mask, pred_mask))
+
+
+if __name__ == "__main__":
+
+    args = parse_args()
+    state = args.__dict__
+    print(state)
+
+    mkdir(args.output)
+
+    db = Database(args.root_folder, has_masks=True)
+    evaluator = Evaluator(db.prototypes, args.output, args)
+    log = os.path.join(args.output, "log.txt")
+
+    for query_set in db.query_sets:
+        print(query_set["dataset_name"], file=open(log, "a"))
+        print(query_set["dataset_name"])
+        has_masks = bool(query_set["masks"])
+        print(
+            "mapk: {:.4f}".format(
+                evaluator.evaluate_query_set(query_set, has_masks, args.dist)
+            )
+        )
+        print(
+            "mapk: {:.4f}".format(
+                evaluator.evaluate_query_set(query_set, has_masks, args.dist)
+            ),
+            file=open(log, "a"),
+        )
+>>>>>>> upstream/master
