@@ -4,9 +4,9 @@ import numpy as np
 
 from sklearn.metrics import recall_score, precision_score, f1_score
 
+from dataloader import Dataloader
 from distances import calculate_distances
 from opt import parse_args
-from data.database import Database
 from feature_extractor import FeatureExtractor
 from utils import mask_background
 from utils import save_mask, save_predictions, mkdir
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     mkdir(args.output)
 
-    db = Database(args.root_folder, has_masks=True, color_space=args.color)
+    db = Dataloader(args.root_folder, has_masks=True)
     evaluator = Evaluator(db.prototypes, args.output, args)
     log = os.path.join(args.output, "log.txt")
 
