@@ -46,7 +46,7 @@ def remove_background(images):
               if np.max(lab)>1:
                      fi = np.zeros(np.shape(filled))
                      for i in range (0, np.max(lab)):
-                            if np.sum((lab==(i+1))*1)>300000:
+                            if np.sum((lab==(i+1))*1)>50000:
                                    a = lab==(i+1)
                                    fi = a+fi
                      filled = fi  
@@ -54,3 +54,4 @@ def remove_background(images):
               mask.append(filled) 
               count = count + 1 
        return mask
+   
