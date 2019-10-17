@@ -1,6 +1,6 @@
 import numpy as np
 
-from dataloader import Dataloader
+from week2.dataloader import Dataloader
 from matplotlib import pyplot as plt
 
 
@@ -81,7 +81,7 @@ class FeatureExtractor:
 
 
 if __name__ == "__main__":
-    dataloader = Dataloader("data/dataset/bbdd/")
+    dataloader = Dataloader("data/qsd1_w2/")
 
     sample = dataloader[2]
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     plt.show()
 
     mr_hist = FeatureExtractor.compute_mr_histogram(sample[1], resolutions=(2,2), mask=(sample[1] != 0), sqrt=True)
-    i = 0
+
     for p in mr_hist:
         plt.title("{} - mr_{}".format(sample[0], i))
         plt.plot(p)

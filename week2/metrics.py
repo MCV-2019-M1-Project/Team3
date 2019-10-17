@@ -57,3 +57,16 @@ def mapk(actual, predicted, k=10):
             The mean average precision at k over the input lists
     """
     return np.mean([apk(a, p, k) for a, p in zip(actual, predicted)])
+
+
+def iou_numpy(outputs, labels, smooth=1e-6):
+    outputs = outputs.squeeze(1)
+
+    intersection = (outputs & labels).sum((1, 2))
+    union = (outputs | labels).sum((1, 2))
+
+    iou = (intersection + smooth) / (union + smooth)
+
+    thresholded = np.ceil(np.clip(20 * (iou - 0.5), 0, 10)) / 10
+
+    return thresholded  # Or thresholded.mean()

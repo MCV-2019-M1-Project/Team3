@@ -4,13 +4,13 @@ import numpy as np
 
 from sklearn.metrics import recall_score, precision_score, f1_score
 
-from dataloader import Dataloader
-from distances import calculate_distances
+from week2.dataloader import Dataloader
+from week2.distances import calculate_distances
 from opt import parse_args
-from feature_extractor import FeatureExtractor
-from utils import mask_background
-from utils import save_mask, save_predictions, mkdir
-from metrics import mapk
+from week2.feature_extractor import FeatureExtractor
+from week2.utils import mask_background
+from week2.utils import save_mask, save_predictions, mkdir
+from week2.metrics import mapk
 
 
 class Evaluator:

@@ -38,8 +38,16 @@ def parse_args():
     parser.add_argument(
         "--bins",
         type=int,
-        default=1000,
+        default=256,
         help="number of bins to use in the histogram",
+    )
+
+    parser.add_argument(
+        "--histogram",
+        type=str,
+        default="single",
+        help="type of histogram to use for FV",
+        choices=["single", "2D", "3D", "multi", "pyramid"]
     )
 
     parser.add_argument(
