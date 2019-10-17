@@ -51,15 +51,13 @@ def remove_bg(img, **kwargs):
         mask = fill
 
     masks.append(mask)
-    result = np.zeros(masks[-1].shape)
     for m in masks:
-        result += m
+        m = cv2.dilate(m, None, iterations=iterations)
+        m = cv2.erode(m, None, iterations=iterations)
+        m = cv2.GaussianBlur(m, (kernel, kernel), 0)
+        m = m.astype("uint8")
 
-    result = cv2.dilate(result, None, iterations=iterations)
-    result = cv2.erode(result, None, iterations=iterations)
-    result = cv2.GaussianBlur(result, (kernel, kernel), 0)
-
-    return result.astype("uint8")
+    return masks
 
 
 def main():
