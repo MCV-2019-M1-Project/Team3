@@ -10,8 +10,8 @@ from week2.utils import save_mask, load_pickle, save_predictions, detect_bboxes,
 
 
 def calc_FV(image, opt, mask=None):
-    resolution_list = [(x + 1, y + 1) for x in range(opt.hist_dims[0]) for y in range(opt.hist_dims[1])]
-    return compute_histogram(opt.histogram, image, resolutions_list=resolution_list, bins=opt.bins,
+
+    return compute_histogram(opt.histogram, image, splits=opt.mr_splits, rec_level=opt.pyramid_rec_lvl, bins=opt.bins,
                              mask=mask,
                              sqrt=opt.sqrt,
                              concat=opt.concat)
@@ -92,10 +92,10 @@ if __name__ == '__main__':
 
     bbdd_FV = []
     for _, image, _ in train:
-        bbdd_FV.append(calc_FV(image, opt))
+        bbdd_FV.append(calc_FV(image, opt).ravel())
 
     bbdd_matrix = np.array(bbdd_FV)
 
-    # print(eval_set(test_2_1, gt_2_1, bbdd_matrix, opt))
+    print(eval_set(test_2_1, gt_2_1, bbdd_matrix, opt))
     # print(eval_set(test_2_2, gt_2_2, bbdd_matrix, opt))
     print(eval_set(test_1_2, gt_1_2, bbdd_matrix, opt))

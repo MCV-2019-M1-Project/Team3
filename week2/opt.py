@@ -2,7 +2,6 @@ import argparse
 
 
 def parse_args():
-
     parser = argparse.ArgumentParser(description="Image Retrieval")
     parser.add_argument("--root_folder",
                         type=str,
@@ -48,17 +47,24 @@ def parse_args():
     parser.add_argument(
         "--histogram",
         type=str,
-        default="1D",
+        default="3D",
         help="type of histogram to use for FV",
         choices=["1D", "2D", "3D", "multiresolution", "pyramid"]
     )
 
     parser.add_argument(
-        "--hist_dims",
-        type=list,
+        "--mr_splits",
+        type=int,
         nargs=2,
         default=[1, 1],
         help="max number of splits on X and Y axis",
+    )
+
+    parser.add_argument(
+        "--pyramid_rec_lvl",
+        type=int,
+        default=1,
+        help=""
     )
 
     parser.add_argument(
