@@ -6,9 +6,11 @@ import cv2
 
 class Dataloader:
 
-    def __init__(self, path, has_masks=False):
+    def __init__(self, path, has_masks=False, detect_bboxes=False):
+        self.root = path
         self.image_files = sorted(glob(os.path.join(path, "*.jpg")))
         self.has_masks = has_masks
+        self.detect_bboxes = detect_bboxes
         if self.has_masks:
             self.masks_files = sorted(glob(os.path.join(path, "*.png")))
         self.current = 0
@@ -19,7 +21,7 @@ class Dataloader:
 
         mask = None
         if self.has_masks:
-            mask = cv2.imread(mask_file)
+            mask = cv2.imread(mask_file, cv2.IMREAD_GRAYSCALE)
         return im, mask
 
     def __len__(self):

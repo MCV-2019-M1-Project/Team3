@@ -4,7 +4,10 @@ import argparse
 def parse_args():
 
     parser = argparse.ArgumentParser(description="Image Retrieval")
-    parser.add_argument("root_folder", type=str, help="Dataset root folder")
+    parser.add_argument("--root_folder",
+                        type=str,
+                        default="data/dataset/",
+                        help="Dataset root folder")
 
     # parametrization
     parser.add_argument(
@@ -14,7 +17,7 @@ def parse_args():
     parser.add_argument(
         "--dist",
         type=str,
-        default="kl_divergence",
+        default="intersection",
         help="distance metric to use",
         choices=[
             "euclidean",
@@ -38,16 +41,24 @@ def parse_args():
     parser.add_argument(
         "--bins",
         type=int,
-        default=256,
+        default=64,
         help="number of bins to use in the histogram",
     )
 
     parser.add_argument(
         "--histogram",
         type=str,
-        default="single",
+        default="1D",
         help="type of histogram to use for FV",
-        choices=["single", "2D", "3D", "multi", "pyramid"]
+        choices=["1D", "2D", "3D", "multiresolution", "pyramid"]
+    )
+
+    parser.add_argument(
+        "--hist_dims",
+        type=list,
+        nargs=2,
+        default=[1, 1],
+        help="max number of splits on X and Y axis",
     )
 
     parser.add_argument(
