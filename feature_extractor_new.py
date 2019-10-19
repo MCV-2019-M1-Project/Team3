@@ -14,8 +14,8 @@ def compute_histogram(img, type_histogram="1-D", bins=1000, mask=None, sqrt=Fals
         return compute_2_d_histogram(img, bins, mask, sqrt, concat)
     elif type_histogram == "3-D":
         return compute_3_d_histogram(img, bins, mask, sqrt, concat)
-    elif type_histogram == "multiblock":
-        return compute_multiblock_histogram(img, bins, mask, sqrt, concat, level)
+    elif (type_histogram == np.array(["multiblock-1-D", "multiblock-2-D", "multiblock-3-D"])).any():
+        return compute_multiblock_histogram(img, bins, mask, sqrt, concat, level, type_histogram)
     else:
         raise Exception("wrong histogram option")
 
@@ -38,37 +38,35 @@ def compute_1_d_histogram(img, bins=1000, mask=None, sqrt=False, concat=False):
         The computed histogram
     """
 
-    if mask is not None:
-        mask = mask.astype("bool")
+    HIST_SIZE = [bins]
+    HIST_RANGE = [0, 256]
+    CHANNELS = [0]
 
     if len(img.shape) == 3:
-        if concat:
-            if img.shape[2] == 3:
-                hist = np.array(
-                    [
-                        np.histogram(
-                            img[..., i][mask], bins=bins, density=True
-                        )[0]
-                        for i in range(3)
-                    ]
-                )
-                hist = hist.ravel()
-            else:
-                raise Exception("Image should have more channels")
+        if img.shape[2] == 3:
+            histogram = np.array(
+                [
+                    cv2.calcHist([img], [i], mask, HIST_SIZE, HIST_RANGE)
+                    for i in range(3)
+                ]
+            )
+            histogram = histogram.ravel()
         else:
-            hist = np.histogram(img[mask], bins=bins, density=True)[0]
+            raise Exception("Image should have more channels")
     else:
-        hist = np.histogram(img[mask], bins=bins, density=True)[0]
+        histogram = cv2.calcHist([img], CHANNELS, mask, HIST_SIZE, HIST_RANGE)
 
-    return np.sqrt(hist) if sqrt else hist
+    cv2.normalize(histogram, histogram, norm_type=cv2.NORM_L1)
+    return histogram
 
 
 def compute_2_d_histogram(img, bins=1000, mask=None, sqrt=False, concat=False, level=1):
     HIST_SIZE = [bins, bins]
     HIST_RANGE = [0, 256, 0, 256]
     CHANNELS = [0, 1]
+    #CHANNELS = [1, 2]
     histogram = cv2.calcHist([img], CHANNELS, mask, HIST_SIZE, HIST_RANGE)
-    cv2.normalize(histogram, histogram, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    cv2.normalize(histogram, histogram, norm_type=cv2.NORM_L1)
     return histogram
 
 
@@ -77,11 +75,12 @@ def compute_3_d_histogram(img, bins=1000, mask=None, sqrt=False, concat=False, l
     HIST_RANGE = [0, 256, 0, 256, 0, 256]
     CHANNELS = [0, 1, 2]
     histogram = cv2.calcHist([img], CHANNELS, mask, HIST_SIZE, HIST_RANGE)
-    cv2.normalize(histogram, histogram, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    cv2.normalize(histogram, histogram, norm_type=cv2.NORM_L1)
     return histogram
 
 
-def compute_multiblock_histogram(img, bins=1000, mask=None, sqrt=False, concat=False, level=1):
+def compute_multiblock_histogram(img, bins=1000, mask=None, sqrt=False, concat=False, level=1,
+                                 type_histogram="multiblock-1-D"):
     """Computes the normalized density histogram of a given array
 
     Args:
@@ -113,7 +112,6 @@ def compute_multiblock_histogram(img, bins=1000, mask=None, sqrt=False, concat=F
 
     submask_list = None
     if mask is not None:
-        mask = mask.astype("bool")
         submask_list = []
         for i in range(0, sub_number):
             for j in range(0, sub_number):
@@ -123,28 +121,18 @@ def compute_multiblock_histogram(img, bins=1000, mask=None, sqrt=False, concat=F
     subhist_list = []
     for i in range(0, sub_number * sub_number):
         subimage = subimage_list[i]
-        if len(subimage.shape) == 3:
-            if concat:
-                if subimage.shape[2] == 3:
-                    if mask is not None:
-                        submask = submask_list[i]
-                    else:
-                        submask = None
-                    subhist = np.array(
-                        [
-                            np.histogram(
-                                subimage[..., i][submask], bins=bins, density=True
-                            )[0]
-                            for i in range(3)
-                        ]
-                    )
-                    subhist = subhist.ravel()
-                else:
-                    raise Exception("Image should have more channels")
-            else:
-                subhist = np.histogram(subimage[submask], bins=bins, density=True)[0]
+        if mask is not None:
+            submask = submask_list[i]
         else:
-            subhist = np.histogram(subimage[submask], bins=bins, density=True)[0]
+            submask = None
+        if type_histogram == "multiblock-1-D":
+            subhist = compute_1_d_histogram(subimage, bins, submask, sqrt, concat)
+        elif type_histogram == "multiblock-2-D":
+            subhist = compute_2_d_histogram(subimage, bins, submask, sqrt, concat)
+        elif type_histogram == "multiblock-3-D":
+            subhist = compute_3_d_histogram(subimage, bins, submask, sqrt, concat)
+        else:
+            raise Exception("wrong histogram option")
         subhist_list = np.append(subhist_list, subhist)
 
     # return np.sqrt(subhist_list) if sqrt else subhist_list
