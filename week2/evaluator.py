@@ -6,7 +6,7 @@ from distances import calculate_distances
 from feature_extractor import compute_histogram
 from metrics import mapk, averge_masks_metrics
 from opt import parse_args
-from utils import save_mask, load_pickle, save_predictions, detect_bboxes, detect_paintings, mkdir
+from utils import save_mask, load_pickle, save_predictions, detect_bboxes, detect_paintings, mkdir, transform_color
 import os
 
 
@@ -23,6 +23,7 @@ def eval_set(loader, gt_correspondences, bbdd_fvs, opt):
     predictions = []
     set_bboxes = []
     for name, query_image, gt_mask in loader:
+        query_image = transform_color(query_image, opt.color) if opt.color is not None else query_image
         multiple_painting, split_point, bg_mask = detect_paintings(query_image)
         bboxes, bbox_mask = detect_bboxes(query_image)
         res_mask = bg_mask - bbox_mask if loader.detect_bboxes else bg_mask
