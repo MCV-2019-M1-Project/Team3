@@ -53,7 +53,9 @@ def parse_args():
             "1-D",
             "2-D",
             "3-D",
-            "multiblock",
+            "multiblock-1-D",
+            "multiblock-2-D",
+            "multiblock-3-D",
         ],
     )
 
