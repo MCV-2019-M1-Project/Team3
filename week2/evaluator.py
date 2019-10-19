@@ -110,7 +110,11 @@ if __name__ == '__main__':
     gt_2_2 = load_pickle("data/qsd2_w2/gt_corresps.pkl")
     mkdir(os.path.join(opt.output, test_2_2.root.split("/")[-1]))
 
-    bbdd_matrix = np.array([calc_FV(image, opt).ravel() for _, image, _ in train])
+    bbdd_matrix = np.array(
+        [calc_FV(
+            transform_color(image, opt.color) if opt.color is not None else image, opt).ravel()
+                for _, image, _ in train
+         ])
     print("Train sample loaded", bbdd_matrix.shape)
 
     print(test_1_1.root, file=log_file)
