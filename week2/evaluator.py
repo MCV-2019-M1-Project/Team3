@@ -1,16 +1,16 @@
 import numpy as np
 from sklearn.metrics import recall_score, precision_score, f1_score
 
-from week2.dataloader import Dataloader
-from week2.distances import calculate_distances
-from week2.feature_extractor import compute_histogram
-from week2.metrics import mapk, averge_masks_metrics
-from week2.opt import parse_args
-from week2.utils import save_mask, load_pickle, save_predictions, detect_bboxes, detect_paintings
+from dataloader import Dataloader
+from distances import calculate_distances
+from feature_extractor import compute_histogram
+from metrics import mapk, averge_masks_metrics
+from opt import parse_args
+from utils import save_mask, load_pickle, save_predictions, detect_bboxes, detect_paintings, mkdir
+import os
 
 
 def calc_FV(image, opt, mask=None):
-
     return compute_histogram(opt.histogram, image, splits=opt.mr_splits, rec_level=opt.pyramid_rec_lvl, bins=opt.bins,
                              mask=mask,
                              sqrt=opt.sqrt,
@@ -22,14 +22,15 @@ def eval_set(loader, gt_correspondences, bbdd_fvs, opt):
     ious = []
     predictions = []
     set_bboxes = []
-    for name, image, gt_mask in loader:
-        multiple_painting, split_point, bg_mask = detect_paintings(image)
-        bboxes, bbox_mask = detect_bboxes(image)
+    for name, query_image, gt_mask in loader:
+        multiple_painting, split_point, bg_mask = detect_paintings(query_image)
+        bboxes, bbox_mask = detect_bboxes(query_image)
         res_mask = bg_mask - bbox_mask if loader.detect_bboxes else bg_mask
         if gt_mask is not None:
             calc_mask_metrics(masks_metrics, gt_mask / 255, bg_mask)
-            save_mask(name.replace("/0", "/out/0").replace(".jpg", ".png"), res_mask * 255)
-
+            mask_name = name.split("/")[-1].replace(".jpg", ".png")
+            if opt.save:
+                save_mask(os.path.join(opt.output, loader.root.split("/")[-1], mask_name), res_mask * 255)
 
         # cropped sets, no need to mask image for retrieval
         if gt_mask is None:
@@ -37,32 +38,33 @@ def eval_set(loader, gt_correspondences, bbdd_fvs, opt):
         if loader.detect_bboxes:
             set_bboxes.append(bboxes)
 
-        if multiple_painting:
+        if multiple_painting and gt_mask is not None:
             im_preds = []
             left_paint = np.zeros_like(res_mask)
             right_paint = np.zeros_like(res_mask)
 
             left_paint[:, split_point:] = res_mask[:, split_point:]
-            left_paint[:, :split_point] = res_mask[:, :split_point]
+            right_paint[:, :split_point] = res_mask[:, :split_point]
 
             res_masks = [left_paint, right_paint]
             for submasks in res_masks:
-                query_fv = calc_FV(image, opt, submasks).ravel()
+                query_fv = calc_FV(query_image, opt, submasks).ravel()
                 distances = calculate_distances(bbdd_fvs, query_fv, mode=opt.dist)
                 im_preds.append((distances.argsort()[:10]).tolist())
             predictions.append(im_preds)
 
         else:
-            query_fv = calc_FV(image, opt, res_mask).ravel()
+            query_fv = calc_FV(query_image, opt, res_mask).ravel()
             distances = calculate_distances(bbdd_fvs, query_fv, mode=opt.dist)
 
-            predictions.append(list(distances.argsort()[:10]))
+            predictions.append((distances.argsort()[:10]).tolist())
 
-    save_predictions("results_{}.pkl".format(loader.root.split("/")[-1]), predictions)
-    save_predictions("bboxes_{}.pkl".format(loader.root.split("/")[-1]), set_bboxes)
+    if opt.save:
+        save_predictions("{}/{}/result.pkl".format(opt.output, loader.root.split("/")[-1]), predictions)
+        save_predictions("{}/{}/text_boxes.pkl".format(opt.output, loader.root.split("/")[-1]), set_bboxes)
 
-    map_k = [mapk(gt_correspondences, predictions, k=i) for i in [10, 3, 1]]
-    avg_mask_metrics = averge_masks_metrics(masks_metrics)
+    map_k = {i: mapk(gt_correspondences, predictions, k=i) for i in [10, 3, 1]}
+    avg_mask_metrics = averge_masks_metrics(masks_metrics) if loader.has_masks else None
 
     return map_k, avg_mask_metrics
 
@@ -79,23 +81,42 @@ def calc_mask_metrics(out_dict, gt_mask, pred_mask):
 
 
 if __name__ == '__main__':
-
     opt = parse_args()
+    os.chdir("..")
+    mkdir(opt.output)
+    log = os.path.join(opt.output, "log.txt")
+    log_file = open(log, "a")
+    print(opt, file=log_file)
+
     train = Dataloader("data/bbdd")
+
+    test_1_1 = Dataloader("data/qsd1_w1")
+    gt_1_1 = load_pickle("data/qsd1_w1/gt_corresps.pkl")
+    mkdir(os.path.join(opt.output, test_1_1.root.split("/")[-1]))
 
     test_2_1 = Dataloader("data/qsd2_w1", has_masks=True)
     gt_2_1 = load_pickle("data/qsd2_w1/gt_corresps.pkl")
+    mkdir(os.path.join(opt.output, test_2_1.root.split("/")[-1]))
+
     test_1_2 = Dataloader("data/qsd1_w2", detect_bboxes=True)
     gt_1_2 = load_pickle("data/qsd1_w2/gt_corresps.pkl")
+    mkdir(os.path.join(opt.output, test_1_2.root.split("/")[-1]))
+
     test_2_2 = Dataloader("data/qsd2_w2", has_masks=True, detect_bboxes=True)
     gt_2_2 = load_pickle("data/qsd2_w2/gt_corresps.pkl")
+    mkdir(os.path.join(opt.output, test_2_2.root.split("/")[-1]))
 
-    bbdd_FV = []
-    for _, image, _ in train:
-        bbdd_FV.append(calc_FV(image, opt).ravel())
+    bbdd_matrix = np.array([calc_FV(image, opt).ravel() for _, image, _ in train])
+    print("Train sample loaded", bbdd_matrix.shape)
 
-    bbdd_matrix = np.array(bbdd_FV)
+    print(test_1_1.root, file=log_file)
+    print(eval_set(test_1_1, gt_1_1, bbdd_matrix, opt), file=log_file)
 
-    print(eval_set(test_2_1, gt_2_1, bbdd_matrix, opt))
-    # print(eval_set(test_2_2, gt_2_2, bbdd_matrix, opt))
-    print(eval_set(test_1_2, gt_1_2, bbdd_matrix, opt))
+    print(test_2_1.root, file=log_file)
+    print(eval_set(test_2_1, gt_2_1, bbdd_matrix, opt), file=log_file)
+
+    print(test_1_2.root, file=log_file)
+    print(eval_set(test_1_2, gt_1_2, bbdd_matrix, opt), file=log_file)
+
+    print(test_2_2.root, file=log_file)
+    print(eval_set(test_2_2, gt_2_2, bbdd_matrix, opt), file=log_file)

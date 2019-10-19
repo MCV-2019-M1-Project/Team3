@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from week2.dataloader import Dataloader
+from dataloader import Dataloader
 from matplotlib import pyplot as plt
 
 
@@ -63,7 +63,7 @@ def compute_histogram_3d(img, bins=256, mask=None, sqrt=False, concat=False):
     return histogram
 
 
-def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False):
+def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, concat=False):
     x_splits, y_splits = splits
     x_len = int(img.shape[0] / x_splits)
     y_len = int(img.shape[1] / y_splits)
@@ -76,19 +76,25 @@ def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False):
             small_mask = None
             if mask is not None:
                 small_mask = mask[i * x_len:(i + 1) * x_len, j * y_len:(j + 1) * y_len]
-            histograms.append(np.histogram(small_img[small_mask], bins=bins, density=True)[0])
+            if concat:
+                if len(small_img.shape) == 3:
+                    small_hist = np.array([
+                        np.histogram(small_img[..., channel][small_mask], bins=bins, density=True)[0]
+                        for channel in range(small_img.shape[2])
+                    ])
+                    histograms.append(small_hist.ravel())
 
     histograms = [np.sqrt(hist) if sqrt else hist for hist in histograms]
     return np.concatenate(histograms, axis=0)
 
 
-def compute_spr_histogram(img, rec_level, bins=256, mask=None, sqrt=False):
-    histograms = np.array([],)
+def compute_spr_histogram(img, rec_level, bins=256, mask=None, sqrt=False, concat=False):
+    histograms = np.array([], )
     for resolution in range(rec_level, 0, -1):
-        histograms = np.concatenate((histograms, compute_mr_histogram(img, (resolution,resolution), bins, mask, sqrt).ravel()))
+        histograms = np.concatenate(
+            (histograms, compute_mr_histogram(img, (resolution, resolution), bins, mask, sqrt, concat).ravel()))
 
     return histograms
-
 
 
 def compute_histogram(histogram_type, img, splits=(1, 1), rec_level=1, bins=256, mask=None, sqrt=False,
@@ -100,9 +106,9 @@ def compute_histogram(histogram_type, img, splits=(1, 1), rec_level=1, bins=256,
     elif histogram_type == "3D":
         return compute_histogram_3d(img, bins=bins, mask=mask, sqrt=sqrt)
     elif histogram_type == "multiresolution":
-        return compute_mr_histogram(img, splits, bins=bins, mask=mask, sqrt=sqrt)
+        return compute_mr_histogram(img, splits, bins=bins, mask=mask, sqrt=sqrt, concat=concat)
     elif histogram_type == "pyramid":
-        return compute_spr_histogram(img, rec_level, bins=bins, mask=mask, sqrt=sqrt)
+        return compute_spr_histogram(img, rec_level, bins=bins, mask=mask, sqrt=sqrt, concat=concat)
     else:
         raise NotImplemented("you must choose from histograms types ")
 

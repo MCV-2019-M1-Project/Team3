@@ -56,14 +56,14 @@ def parse_args():
         "--mr_splits",
         type=int,
         nargs=2,
-        default=[1, 1],
+        default=[2, 2],
         help="max number of splits on X and Y axis",
     )
 
     parser.add_argument(
         "--pyramid_rec_lvl",
         type=int,
-        default=1,
+        default=3,
         help=""
     )
 

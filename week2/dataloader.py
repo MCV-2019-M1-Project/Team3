@@ -12,7 +12,7 @@ class Dataloader:
         self.has_masks = has_masks
         self.detect_bboxes = detect_bboxes
         if self.has_masks:
-            self.masks_files = sorted(glob(os.path.join(path, "*.png")))
+            self.masks_files = [f.replace("jpg", "png") for f in self.image_files]
         self.current = 0
 
     def load_image(self, im_file, mask_file):
@@ -40,3 +40,5 @@ class Dataloader:
 
     def __iter__(self):
         return self
+
+
