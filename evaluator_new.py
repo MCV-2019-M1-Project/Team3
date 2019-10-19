@@ -1,5 +1,5 @@
 import os
-
+import matplotlib.pyplot as plt
 import numpy as np
 
 from sklearn.metrics import recall_score, precision_score, f1_score
@@ -60,7 +60,7 @@ class Evaluator:
             if has_masks:
                 mask_filename = os.path.join(
                     self.output_folder,
-                    file.split("/")[-1].split(".")[0] + ".png",
+                    file.split("/")[-1].split(".")[0] + "_2.png",
                 )
                 im, mask = mask_background(im)
                 gt_mask = query_set_dict["masks"][file.replace("jpg", "png")]
@@ -100,11 +100,13 @@ class Evaluator:
 if __name__ == "__main__":
 
     args = parse_args()
-    args.type_histogram = "multiblock"
-    args.dist = "intersection"
-    #args.color = "LAB"
-    args.bins = 50
+    args.type_histogram = "multiblock-3-D"
+    args.dist = "euclidean"
+    #args.color = "HSV"
+    args.bins = 16
     args.concat = True
+    args.level = 2
+    args.save = False
     state = args.__dict__
     print(state)
 
@@ -113,6 +115,10 @@ if __name__ == "__main__":
     db = Database(args.root_folder, has_masks=True, color_space=args.color)
     evaluator = Evaluator(db.prototypes, args.output, args)
     log = os.path.join(args.output, "log.txt")
+    print(
+        state,
+        file=open(log, "a"),
+    )
 
     for query_set in db.query_sets:
         print(query_set["dataset_name"], file=open(log, "a"))
@@ -132,3 +138,8 @@ if __name__ == "__main__":
             file=open(log, "a"),
         )
         print({k:np.mean(v) for k, v in evaluator.metrics.items()})
+
+
+
+# use dict
+#plt.imshow(self.prototypes["images"]['data/dataset/bbdd\\bbdd_00094.jpg'])
