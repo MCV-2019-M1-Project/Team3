@@ -1,9 +1,19 @@
-import cv2
 import glob
+import os
+import cv2
 from sklearn.metrics import f1_score, precision_score, recall_score
 import numpy as np
 from tqdm import tqdm
 from skimage import measure
+import errno
+
+
+def mkdir(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
 
 def remove_bg(img, **kwargs):
@@ -46,7 +56,7 @@ def remove_bg(img, **kwargs):
         for i in range(1, cc.max() + 1):
             cc_i = cc == i
             if cc_i.sum() > 50000:
-                fill = cc_i.astype('int32') + fill
+                fill = cc_i.astype("int32") + fill
 
         mask = fill
 
@@ -55,15 +65,17 @@ def remove_bg(img, **kwargs):
         m = cv2.dilate(m, None, iterations=iterations)
         m = cv2.erode(m, None, iterations=iterations)
         m = cv2.GaussianBlur(m, (kernel, kernel), 0)
-        m = m.astype("uint8")
+        m = (m * 255).astype("uint8")
+        cv2.imshow("mask", cv2.resize(m, (500, 500)))
+        cv2.waitKey(0)
 
     return masks
 
 
 def main():
 
-    images = sorted(glob.glob("data/dataset/val2/*.jpg"))
-    masks = sorted(glob.glob("data/dataset/val2/*.png"))
+    images = sorted(glob.glob("data/dataset/val1/*.jpg"))
+    masks = sorted(glob.glob("data/dataset/val1/*.png"))
     metrics = {}
 
     preds = []
@@ -80,13 +92,14 @@ def main():
     }
     for path_img, path_mask in tqdm(zip(images, masks), total=len(images)):
         img = cv2.imread(path_img)
-        preds.append(cv2.resize(remove_bg(img, **args), (500, 500)))
-        mask = cv2.resize(cv2.imread(path_mask, 0), (500, 500))
-        cv2.imshow("org", cv2.resize(img, (500, 500)))
-        cv2.imshow("gt", mask)
-        cv2.imshow("pred", preds[-1] * 255)
-        cv2.waitKey(0)
-        gt.append((mask / 255).astype("uint8"))
+        remove_bg(img, **args)
+        # preds.append(cv2.resize(remove_bg(img, **args), (500, 500)))
+        # mask = cv2.resize(cv2.imread(path_mask, 0), (500, 500))
+        # cv2.imshow("org", cv2.resize(img, (500, 500)))
+        # cv2.imshow("gt", mask)
+        # cv2.imshow("pred", preds[-1] * 255)
+        # cv2.waitKey(0)
+        # gt.append((mask / 255).astype("uint8"))
 
     metrics["precision"] = precision_score(
         np.array(gt).ravel(), np.array(preds).ravel()
