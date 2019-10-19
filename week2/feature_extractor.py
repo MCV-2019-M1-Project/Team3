@@ -75,7 +75,7 @@ def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, co
             small_img = img[i * x_len:(i + 1) * x_len, j * y_len:(j + 1) * y_len]
             small_mask = None
             if mask is not None:
-                small_mask = mask[i * x_len:(i + 1) * x_len, j * y_len:(j + 1) * y_len].astype(bool)
+                small_mask = mask[i * x_len:(i + 1) * x_len, j * y_len:(j + 1) * y_len].astype("bool")
             if concat:
                 if len(small_img.shape) == 3:
                     small_hist = np.array([
@@ -83,6 +83,10 @@ def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, co
                         for channel in range(small_img.shape[2])
                     ])
                     histograms.append(small_hist.ravel())
+                else:
+                    raise Exception("Image should have more channels")
+            else:
+                histograms.append((np.histogram(small_img[small_mask], bins=bins, density=True)[0]).ravel())
 
     histograms = [np.sqrt(hist) if sqrt else hist for hist in histograms]
     return np.concatenate(histograms, axis=0)
