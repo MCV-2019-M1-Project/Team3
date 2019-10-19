@@ -75,7 +75,7 @@ def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, co
             small_img = img[i * x_len:(i + 1) * x_len, j * y_len:(j + 1) * y_len]
             small_mask = None
             if mask is not None:
-                small_mask = mask[i * x_len:(i + 1) * x_len, j * y_len:(j + 1) * y_len]
+                small_mask = mask[i * x_len:(i + 1) * x_len, j * y_len:(j + 1) * y_len].astype(bool)
             if concat:
                 if len(small_img.shape) == 3:
                     small_hist = np.array([

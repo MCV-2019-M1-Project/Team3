@@ -43,6 +43,7 @@ def transform_color(image, color_space):
     """
 
     color_transforms = {
+        "RGB": cv2.COLOR_BGR2RGB,
         "HSV": cv2.COLOR_BGR2HSV,
         "LAB": cv2.COLOR_BGR2LAB,
         "YCbCr": cv2.COLOR_BGR2YCrCb,
