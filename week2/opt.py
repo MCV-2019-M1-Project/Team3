@@ -34,7 +34,7 @@ def parse_args():
         type=str,
         default=None,
         help="color space to use",
-        choices=["HSV", "LAB", "Gray", "XYZ", "HLS", "Luv", "YCbCr"],
+        choices=["HSV", "LAB", "Gray", "XYZ", "HLS", "Luv", "YCbCr", "RGB"],
     )
 
     parser.add_argument(
@@ -56,7 +56,7 @@ def parse_args():
         "--mr_splits",
         type=int,
         nargs=2,
-        default=[2, 2],
+        default=[3, 3],
         help="max number of splits on X and Y axis",
     )
 
