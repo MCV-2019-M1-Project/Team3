@@ -65,6 +65,8 @@ We have also improved the remove background using morphology.
 3. Flood fill
 4. Morphological opening to remove the unwanted false positives arround the painting
 
+We have achieved a precision of 0.95, recall of 0.97, f1 score of 0.96.
+
 #### Task 2: Test query system using QSD2-W1 (from week1) with Task1 descriptors and evaluate results
 
 From 0.08 MAP@10 obtained last week for QSD 1, this week we have 0.331 using the optimal parameters found last week. But with the new descriptors we have reached up to 0.602 using the pyramid histogram with 3 levels.
