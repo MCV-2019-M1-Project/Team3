@@ -27,11 +27,12 @@ def eval_set(loader, gt_correspondences, bbdd_fvs, opt):
         # transform to another color space
         multiple_painting, split_point, bg_mask = detect_paintings(query_image)
         bboxes, bbox_mask = detect_bboxes(query_image)
-        res_mask = bg_mask - bbox_mask if loader.detect_bboxes else bg_mask
-        if gt_mask is not None:
-            calc_mask_metrics(masks_metrics, gt_mask / 255, bg_mask)
-            mask_name = name.split("/")[-1].replace(".jpg", ".png")
+        res_mask = bg_mask.astype(bool) ^ bbox_mask.astype(bool) if loader.detect_bboxes else bg_mask
+        if loader.compute_masks:
+            if loader.evaluate:
+                calc_mask_metrics(masks_metrics, gt_mask / 255, bg_mask)
             if opt.save:
+                mask_name = name.split("/")[-1].replace(".jpg", ".png")
                 save_mask(os.path.join(opt.output, loader.root.split("/")[-1], mask_name), res_mask * 255)
 
         # cropped sets, no need to mask image for retrieval
@@ -67,8 +68,8 @@ def eval_set(loader, gt_correspondences, bbdd_fvs, opt):
         save_predictions("{}/{}/result.pkl".format(opt.output, loader.root.split("/")[-1]), predictions)
         save_predictions("{}/{}/text_boxes.pkl".format(opt.output, loader.root.split("/")[-1]), set_bboxes)
 
-    map_k = {i: mapk(gt_correspondences, predictions, k=i) for i in [10, 3, 1]}
-    avg_mask_metrics = averge_masks_metrics(masks_metrics) if loader.has_masks else None
+    map_k = {i: mapk(gt_correspondences, predictions, k=i) for i in [10, 3, 1]} if loader.evaluate else None
+    avg_mask_metrics = averge_masks_metrics(masks_metrics) if loader.evaluate else None
 
     return map_k, avg_mask_metrics
 
@@ -94,21 +95,27 @@ if __name__ == '__main__':
 
     train = Dataloader("data/bbdd")
 
-    test_1_1 = Dataloader("data/qsd1_w1")
+    test_1_1 = Dataloader("data/qsd1_w1", evaluate=True)
     gt_1_1 = load_pickle("data/qsd1_w1/gt_corresps.pkl")
     mkdir(os.path.join(opt.output, test_1_1.root.split("/")[-1]))
 
-    test_2_1 = Dataloader("data/qsd2_w1", has_masks=True)
+    test_2_1 = Dataloader("data/qsd2_w1", compute_masks=True, evaluate=True)
     gt_2_1 = load_pickle("data/qsd2_w1/gt_corresps.pkl")
     mkdir(os.path.join(opt.output, test_2_1.root.split("/")[-1]))
 
-    test_1_2 = Dataloader("data/qsd1_w2", detect_bboxes=True)
+    test_1_2 = Dataloader("data/qsd1_w2", detect_bboxes=True, evaluate=True)
     gt_1_2 = load_pickle("data/qsd1_w2/gt_corresps.pkl")
     mkdir(os.path.join(opt.output, test_1_2.root.split("/")[-1]))
 
-    test_2_2 = Dataloader("data/qsd2_w2", has_masks=True, detect_bboxes=True)
+    test_2_2 = Dataloader("data/qsd2_w2", compute_masks=True, detect_bboxes=True, evaluate=True)
     gt_2_2 = load_pickle("data/qsd2_w2/gt_corresps.pkl")
     mkdir(os.path.join(opt.output, test_2_2.root.split("/")[-1]))
+
+    testset_1_2 = Dataloader("data/qst1_w2", detect_bboxes=True)
+    mkdir(os.path.join(opt.output, testset_1_2.root.split("/")[-1]))
+
+    testset_2_2 = Dataloader("data/qst2_w2", compute_masks=True, detect_bboxes=True)
+    mkdir(os.path.join(opt.output, testset_2_2.root.split("/")[-1]))
 
     bbdd_matrix = np.array(
         [calc_FV(
@@ -128,3 +135,9 @@ if __name__ == '__main__':
 
     print(test_2_2.root, file=log_file)
     print(eval_set(test_2_2, gt_2_2, bbdd_matrix, opt), file=log_file)
+
+    print(testset_1_2.root, file=log_file)
+    print(eval_set(testset_1_2, None, bbdd_matrix, opt), file=log_file)
+
+    print(testset_2_2.root, file=log_file)
+    print(eval_set(testset_2_2, None, bbdd_matrix, opt), file=log_file)
