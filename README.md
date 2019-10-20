@@ -4,7 +4,7 @@
 
 #### Task 1: Compute image descriptors
 
-We compute the histogram of 1000 bins of the images using different color spaces
+We compute the histogram of 256 bins of the images using different color spaces
 
 * RGB
 * XYZ
