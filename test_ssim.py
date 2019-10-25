@@ -18,13 +18,15 @@ f = open('C:/Users/Sara/Datos/Master/M1/Project/week3/qsd1_w3/gt_corresps.pkl','
 gt = pickle.load(f)
 
 
-images_den = []
-count = 0
-for im in images:
-    im = denoise_ft.remove_noise_ft(images[count])
-    images_den.append(im)
-    count = count + 1
-    print(count)
+
+'Uncoment if you first want to denoise the images'
+#images_den = []
+#count = 0
+#for im in images:
+#    im = denoise_ft.remove_noise_ft(images[count])
+#    images_den.append(im)
+#    count = count + 1
+#    print(count)
     
     
     
@@ -33,7 +35,7 @@ dist3 = []
 dist1 = []
 distan = np.zeros((np.shape(dataset)[0]))
 count2 = 0
-for im in images_den:
+for im in images:
     count = 0  
     for imd in dataset:
         distan[count] = ssim_feature.compare_ssim(im,imd)
