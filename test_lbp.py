@@ -86,7 +86,7 @@ for im in images:
     count = count + 1
     print(count)
 
-
+#%%
 bins = 10
 
 #hist_im_query = np.zeros((np.shape(images)[0], bins))
@@ -94,8 +94,9 @@ hist_im_query = []
 count = 0
 print('Test images')
 for im in images_den:   
-    multiple_painting, split_point, image_bg = utils.detect_paintings(im)
+    multiple_painting, split_point, image_bg = utils.detect_paintings(images[count])
     if multiple_painting == True:
+        print('Two paintings')
         add = split_point-100
         subim1 = lbp_feature.cut_image(image_bg[:,:add], im[:,:add,:])
         subim2 = lbp_feature.cut_image(image_bg[:,add:], im[:,add:,:])
