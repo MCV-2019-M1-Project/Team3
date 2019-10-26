@@ -31,11 +31,16 @@ def loc_bin_pat(im, bins=50):
     Rrturn:
         lbp_hist: the local binary pattern histogram of the input image
     """
-#    im = crop(im, 0.4)
     im = cv2.resize(im, (400,400))
     im = cv2.cvtColor(im, cv2.COLOR_BGR2LAB)[...,0]
-    lbp_im = feature.local_binary_pattern(im, 8, 2, 'nri_uniform')
-    hist_im = np.histogram(lbp_im, bins, density = True)[0]
+    #im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    lbp_im = feature.local_binary_pattern(im, 8, 10, 'nri_uniform')
+    lbp_im1 = feature.local_binary_pattern(im, 8, 20, 'nri_uniform')
+    lbp_im2 = feature.local_binary_pattern(im, 8, 30, 'nri_uniform')
+
+    hist_im = np.concatenate((np.histogram(lbp_im, bins, density = True)[0],
+                              np.histogram(lbp_im1, bins, density = True)[0],
+                              np.histogram(lbp_im2, bins, density = True)[0]))
     return hist_im
 
 

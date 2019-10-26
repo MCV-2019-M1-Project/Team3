@@ -17,18 +17,18 @@ images = [cv2.imread(file) for file in glob.glob('C:/Users/Sara/Datos/Master/M1/
 f = open('C:/Users/Sara/Datos/Master/M1/Project/week3/qsd1_w3/gt_corresps.pkl','rb')
 gt = pickle.load(f)
 
-
-#images_den = []
-#count = 0
-#for im in images:
-#    im = denoise_ft.remove_noise_ft(images[count])
-#    images_den.append(im)
-#    count = count + 1
-#    print(count)
-
+#%%
+images_den = []
+count = 0
+for im in images:
+    im = denoise_ft.remove_noise_ft(images[count])
+    images_den.append(im)
+    count = count + 1
+    print(count)
+#%%
 
 bins = 50
-hist_im_query = np.zeros((np.shape(images)[0], bins))
+hist_im_query = np.zeros((np.shape(images)[0], bins*3))
 count = 0
 print('Test images')
 for im in images:    
@@ -37,7 +37,7 @@ for im in images:
     count = count + 1 
 
 
-hist_dataset = np.zeros((np.shape(dataset)[0], bins))
+hist_dataset = np.zeros((np.shape(dataset)[0], bins*3))
 count = 0
 print('Dataset images')
 for im in dataset:    
@@ -67,7 +67,7 @@ print('Map@10: ', '{:.10f}'.format(mapat10),
       'Map@1: ', '{:.10f}'.format(mapat1))
 
 
-
+#%%
 
 print('QSD-2')
 dataset = [cv2.imread(file) for file in glob.glob('C:/Users/Sara/Datos/Master/M1/Project/dataset/*.jpg')]
