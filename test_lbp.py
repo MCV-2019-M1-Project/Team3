@@ -18,20 +18,20 @@ f = open('C:/Users/Sara/Datos/Master/M1/Project/week3/qsd1_w3/gt_corresps.pkl','
 gt = pickle.load(f)
 
 
-images_den = []
-count = 0
-for im in images:
-    im = denoise_ft.remove_noise_ft(images[count])
-    images_den.append(im)
-    count = count + 1
-    print(count)
+#images_den = []
+#count = 0
+#for im in images:
+#    im = denoise_ft.remove_noise_ft(images[count])
+#    images_den.append(im)
+#    count = count + 1
+#    print(count)
 
 
-bins = 6
+bins = 50
 hist_im_query = np.zeros((np.shape(images)[0], bins))
 count = 0
 print('Test images')
-for im in images_den:    
+for im in images:    
     lbp_im = lbp_feature.loc_bin_pat(im, bins)
     hist_im_query[count] = lbp_im
     count = count + 1 
@@ -78,22 +78,22 @@ f = open('C:/Users/Sara/Datos/Master/M1/Project/week3/qsd2_w3/gt_corresps.pkl','
 gt = pickle.load(f)
 
 
-images_den = []
-count = 0
-for im in images:
-    im = denoise_ft.remove_noise_ft(images[count])
-    images_den.append(im)
-    count = count + 1
-    print(count)
+#images_den = []
+#count = 0
+#for im in images:
+#    im = denoise_ft.remove_noise_ft(images[count])
+#    images_den.append(im)
+#    count = count + 1
+#    print(count)
 
-#%%
-bins = 6
+
+bins = 50
 
 #hist_im_query = np.zeros((np.shape(images)[0], bins))
 hist_im_query = []
 count = 0
 print('Test images')
-for im in images_den:   
+for im in images:   
     multiple_painting, split_point, image_bg = utils.detect_paintings(images[count])
     if multiple_painting == True:
         print('Two paintings')

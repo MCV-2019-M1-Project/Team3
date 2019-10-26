@@ -15,7 +15,7 @@ def crop(im,per):
     return crop_im
 
 
-def loc_bin_pat(im, bins=6):
+def loc_bin_pat(im, bins=50):
     """
     Calculates the histogram of the local binary image of an input image
     Optional parameters to modify:
@@ -31,9 +31,10 @@ def loc_bin_pat(im, bins=6):
     Rrturn:
         lbp_hist: the local binary pattern histogram of the input image
     """
-    im = crop(im, 0.4)
+#    im = crop(im, 0.4)
+    im = cv2.resize(im, (400,400))
     im = cv2.cvtColor(im, cv2.COLOR_BGR2LAB)[...,0]
-    lbp_im = feature.local_binary_pattern(im, 4, 1, 'uniform')
+    lbp_im = feature.local_binary_pattern(im, 8, 2, 'nri_uniform')
     hist_im = np.histogram(lbp_im, bins, density = True)[0]
     return hist_im
 
