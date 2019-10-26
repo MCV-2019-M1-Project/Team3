@@ -105,7 +105,7 @@ def compute_spr_histogram(img, rec_level, bins=256, mask=None, sqrt=False, conca
 
 
 def compute_feature_vector(feature_type, img, splits=(1, 1), rec_level=1, bins=256, mask=None, sqrt=False,
-                           concat=False, hog_params=None):
+                           concat=False, hog_params=None, dct_block_size=32, dct_coeffs=10):
     if feature_type == "1D":
         return compute_histogram_1d(img, bins=bins, mask=mask, sqrt=sqrt, concat=concat)
     elif feature_type == "2D":
@@ -119,7 +119,7 @@ def compute_feature_vector(feature_type, img, splits=(1, 1), rec_level=1, bins=2
     elif feature_type == "hog":
         return compute_image_hog(img, hog_params, mask=mask)
     elif feature_type == "dct":
-        return compute_image_dct(img, mask=mask)
+        return compute_image_dct(img, mask=mask, block_size=dct_block_size,num_coefs=dct_coeffs)
 
     else:
         raise NotImplemented("you must choose from histograms types ")

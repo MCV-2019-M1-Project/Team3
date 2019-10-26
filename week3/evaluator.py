@@ -15,7 +15,7 @@ def calc_FV(image, opt, mask=None):
     return compute_feature_vector(opt.histogram, image, splits=opt.mr_splits, rec_level=opt.pyramid_rec_lvl, bins=opt.bins,
                              mask=mask,
                              sqrt=opt.sqrt,
-                             concat=opt.concat, hog_params=opt.hog_params)
+                             concat=opt.concat, hog_params=opt.hog_params, dct_block_size=opt.dct_block_size, dct_coeffs=opt.dct_coeffs)
 
 
 def eval_set(loader, gt_correspondences, bbdd_fvs, opt):

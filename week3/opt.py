@@ -53,6 +53,18 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--dct_coeffs",
+        type=int,
+        default=10
+    )
+
+    parser.add_argument(
+        "--dct_block_size",
+        type=int,
+        default=32
+    )
+
+    parser.add_argument(
         "--mr_splits",
         type=int,
         nargs=2,
