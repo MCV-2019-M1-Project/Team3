@@ -84,4 +84,16 @@ def parse_args():
         "--output", type=str, default="output", help="path to save the results"
     )
 
+    parser.add_argument(
+        "--save_denoised_picture", type=str, default="True", help="path to save the results"
+    )
+
+    parser.add_argument(
+        "--blur_type",
+        type=str,
+        default="best",
+        help="type of blur for eliminating noise",
+        choices=["GaussianBlur", "medianBlur", "blur", "bilateralFilter", "best"]
+    )
+
     return parser.parse_args()
