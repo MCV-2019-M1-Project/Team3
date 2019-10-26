@@ -12,10 +12,12 @@ import os
 
 
 def calc_FV(image, opt, mask=None):
-    return compute_feature_vector(opt.histogram, image, splits=opt.mr_splits, rec_level=opt.pyramid_rec_lvl, bins=opt.bins,
-                             mask=mask,
-                             sqrt=opt.sqrt,
-                             concat=opt.concat, hog_params=opt.hog_params, dct_block_size=opt.dct_block_size, dct_coeffs=opt.dct_coeffs)
+    return compute_feature_vector(opt.histogram, image, splits=opt.mr_splits, rec_level=opt.pyramid_rec_lvl,
+                                  bins=opt.bins,
+                                  mask=mask,
+                                  sqrt=opt.sqrt,
+                                  concat=opt.concat, hog_params=opt.hog_params, dct_block_size=opt.dct_block_size,
+                                  dct_coeffs=opt.dct_coeffs)
 
 
 def eval_set(loader, gt_correspondences, bbdd_fvs, opt):
@@ -54,7 +56,7 @@ def eval_set(loader, gt_correspondences, bbdd_fvs, opt):
             res_masks = [left_paint, right_paint]
             for submasks in res_masks:
                 query_fv = calc_FV(query_image, opt, submasks).ravel()
-                query_fv +=1
+                query_fv += 1
                 distances = calculate_distances(bbdd_fvs, query_fv, mode=opt.dist)
                 im_preds.append((distances.argsort()[:10]).tolist())
             predictions.append(im_preds)
@@ -93,14 +95,21 @@ if __name__ == '__main__':
     log = os.path.join(opt.output, "log.txt")
     log_file = open(log, "a")
     print(opt, file=log_file)
-    opt.histogram = "dct"
+    opt.histogram = "hog"
 
     opt.hog_params = {
         "window": (256, 256),
-        "block_size": (64,64),
-        "block_stride": (16,16),
-        "cell_size": (16,16),
-        "bins": 4
+        "block_size": (16, 16),
+        "block_stride": (8, 8),
+        "cell_size": (8, 8),
+        "bins": 5,
+        "d_appert": 1,
+        "winSigma": 4.,
+        "hist_norm_type": 0,
+        "l2_Hys_thresh": 2e-01,
+        "gamma_correct": 0,
+        "levels": 64
+
     }
 
     train = Dataloader("data/bbdd")

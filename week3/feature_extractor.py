@@ -5,7 +5,7 @@ from docutils.nodes import block_quote
 from matplotlib import pyplot as plt
 from scipy.fftpack import dct
 from week3.utils import cut_image
-
+from skimage.feature import hog
 
 def compute_histogram_1d(img, bins=256, mask=None, sqrt=False, concat=False):
     """Computes the normalized density histogram of a given array
@@ -119,7 +119,7 @@ def compute_feature_vector(feature_type, img, splits=(1, 1), rec_level=1, bins=2
     elif feature_type == "hog":
         return compute_image_hog(img, hog_params, mask=mask)
     elif feature_type == "dct":
-        return compute_image_dct(img, mask=mask, block_size=dct_block_size,num_coefs=dct_coeffs)
+        return compute_image_dct(img, mask=mask, block_size=dct_block_size, num_coefs=dct_coeffs)
 
     else:
         raise NotImplemented("you must choose from histograms types ")
@@ -144,40 +144,37 @@ def compute_image_dct(image, block_size=64, num_coefs=10, mask=None):
     return np.array(dct_out).ravel()
 
 
-def compute_image_hog(image, hog_params, mask=None):
+# do not use, bad results not added to opt
+def compute_image_hog(image, mask=None):
     if mask is not None:
-        image = image[mask.astype("bool"), :].astype("float")
+        image = cut_image(mask.astype("bool"), image)
 
-    image = cv2.resize(image, (512, 512))
+    image = cv2.resize(image, (256,256))
 
-    hog = cv2.HOGDescriptor(hog_params['window'], hog_params['block_size'], hog_params['block_stride'],
-                            hog_params['cell_size'], hog_params['bins'])
-
-    return hog.compute(image)
+    return hog(image, orientations=9, pixels_per_cell=(16, 16), cells_per_block=(4,4),
+                       block_norm='L2-Hys', visualize=False, transform_sqrt=True, feature_vector=True,
+                       multichannel=True)
 
 
 if __name__ == "__main__":
     dataloader = Dataloader("../data/qsd2_w3/", evaluate=True)
 
     hog_params = {
-        "window": (128, 128),
-        "block_size": (64, 64),
+        "window": (256, 256),
+        "block_size": (32, 32),
         "block_stride": (32, 32),
-        "cell_size": (32, 32),
-        "bins": 8,
-        "d_apperture": 1,
-        "win_sigma": 4.,
-        "hist_norm": 0,
-        "l2_thresh": 0.2,
-        "gamma_correction_factor": 0,
-        "levels": 1
+        "cell_size": (16, 16),
+        "bins": 9,
+        "d_appert": 1,
+        "winSigma": 4.,
+        "hist_norm_type": 0,
+        "l2_Hys_thresh": 2e-01,
+        "gamma_correct": 0,
+        "levels": 64
+
     }
 
     for sample in dataloader:
-        out = compute_image_dct(image=sample[1])
-        print(out)
-        plt.imshow((out / 255), cmap="gray")
-        plt.show()
-        # hog_vector = compute_image_hog(sample[1], hog_params, mask=sample[2])
+        hog_vector = compute_image_hog(sample[1], hog_params, mask=sample[2])
 
-        # print(hog_vector.shape, hog_vector)
+        print(hog_vector.shape, hog_vector)
