@@ -27,7 +27,7 @@ for im in images:
     print(count)
 
 
-bins = 10
+bins = 6
 hist_im_query = np.zeros((np.shape(images)[0], bins))
 count = 0
 print('Test images')
@@ -87,7 +87,7 @@ for im in images:
     print(count)
 
 #%%
-bins = 10
+bins = 6
 
 #hist_im_query = np.zeros((np.shape(images)[0], bins))
 hist_im_query = []

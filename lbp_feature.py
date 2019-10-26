@@ -15,7 +15,7 @@ def crop(im,per):
     return crop_im
 
 
-def loc_bin_pat(im, bins=10):
+def loc_bin_pat(im, bins=6):
     """
     Calculates the histogram of the local binary image of an input image
     Optional parameters to modify:
