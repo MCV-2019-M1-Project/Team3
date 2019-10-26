@@ -26,13 +26,13 @@ def detect_denoise(im, blur_type):
     if Noise_level_before > 3.0:
         if blur_type == "GaussianBlur":
             blur_type_last = "GaussianBlur"
-            im = cv2.GaussianBlur(im, (5, 5), 0)
+            im = cv2.GaussianBlur(im, (3, 3), 0)
         elif blur_type == "medianBlur":
             blur_type_last = "medianBlur"
-            im = cv2.medianBlur(im, 5)
+            im = cv2.medianBlur(im, 3)
         elif blur_type == "blur":
             blur_type_last = "blur"
-            im = cv2.blur(im,(5,5))
+            im = cv2.blur(im,(3,3))
         elif blur_type == "bilateralFilter":
             blur_type_last = "bilateralFilter"
             im = cv2.bilateralFilter(im, 7, 50, 50)
@@ -69,6 +69,7 @@ if __name__ == '__main__':
     opt.color = "RGB"
     opt.bins = 256
     opt.concat = True
+    opt.blur_type = "medianBlur"
 
     os.chdir("..")
     mkdir(opt.output)
