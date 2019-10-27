@@ -150,7 +150,8 @@ def detect_text_google(img):
     response = client.text_detection(image=image)
     texts = response.text_annotations
 
-    return texts[0].description.strip("\n")
+
+    return texts[0].description.split("\n")[0]
 
 
 def main():

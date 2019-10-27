@@ -79,7 +79,7 @@ def compute_image_dct(image, block_size=64, num_coefs=10, mask=None):
     return np.array(dct_out).ravel()
 
 
-def compute_mr_histogram(img, splits=(5, 5), bins=64, mask=None, sqrt=False, concat=False):
+def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, concat=False):
 
     x_splits, y_splits = splits
     x_len = int(img.shape[0] / x_splits)

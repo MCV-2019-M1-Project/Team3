@@ -17,8 +17,11 @@ def main():
 
     args = parse_args()
 
+    mkdir(args.output)
+    log_path = os.path.join(args.output, "log.txt")
+
     print(args.__dict__)
-    print(args.__dict__, file=open("log.txt", "a"))
+    print(args.__dict__, file=open(log_path, "a"))
 
     if "d2" in args.query or "t2" in args.query:
         process_bg = True
@@ -104,13 +107,12 @@ def main():
         preds_flat = [val for p in preds for val in p]
         maps = [mapk(gt_flat, preds_flat, k=i) for i in [1, 3]]
         print("Map@{}: {}".format(1, maps[0]))
-        print("Map@{}: {}".format(1, maps[0]), file=open("log.txt", "a"))
+        print("Map@{}: {}".format(1, maps[0]), file=open(log_path, "a"))
         print("Map@{}: {}".format(3, maps[1]))
-        print("Map@{}: {}".format(3, maps[1]), file=open("log.txt", "a"))
+        print("Map@{}: {}".format(3, maps[1]), file=open(log_path, "a"))
 
     if args.save:
 
-        mkdir(args.output)
         save_predictions(
             os.path.join(args.output, "preds_{}.pkl".format(args.query)), preds
         )
