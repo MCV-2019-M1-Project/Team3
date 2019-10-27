@@ -1,0 +1,16 @@
+#!/bin/bash
+
+for pipe in "dct" "ssim" "color" "lbp"; do
+    for root in "data/dataset/week3"; do
+        for query in "qsd1_w3" "qsd2_w3"; do
+            python main.py --root_folder $root --query $query --pipeline text $pipe
+        done
+    done
+
+    for root in "data/dataset/week2"; do
+        for query in "qsd1_w2" "qsd2_w2"; do
+            python main.py --root_folder $root --query $query --pipeline text $pipe
+
+        done
+    done
+done

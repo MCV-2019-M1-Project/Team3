@@ -1,10 +1,13 @@
-import cv2
 import glob
 import numpy as np
 from imutils.object_detection import non_max_suppression
 import pytesseract
-from collections import OrderedDict
 from fuzzywuzzy import fuzz
+from google.cloud import vision
+import io
+import cv2
+from tqdm import tqdm
+from similarity.normalized_levenshtein import NormalizedLevenshtein
 
 
 def detect_text(img):
@@ -101,47 +104,74 @@ def detect_text(img):
         # the text region of the input image
         text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
         output = img.copy()
-        cv2.rectangle(output, (startX, startY), (endX, endY), (0, 0, 255), 2)
-        cv2.putText(
-            output,
-            text,
-            (startX, startY - 20),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1.2,
-            (0, 0, 255),
-            3,
-        )
 
-    return img_text
+    return " ".join(img_text)
 
 
-def retrieve_match(text, database):
-    pass
+def retrieve_matches(img, database, author_to_image):
 
+    normalized_levenshtein = NormalizedLevenshtein()
+    text = detect_text_google(img)
+    # text = detect_text(img)
+    # sims = np.array(
+    #     [
+    #         fuzz.token_sort_ratio(text, author)
+    #         # normalized_levenshtein.similarity(text, author)
+    #         for author in author_to_image.values()
+    #     ]
+    # )
+    sims = np.array(
+        [
+            normalized_levenshtein.similarity(text, author)
+            for author in author_to_image.values()
+        ]
+    )
+    idxs = np.where(sims > 0.5)[0]
+    # if no high confidence match was found get the 10 highest
+    if idxs.size == 0:
+        idxs = sims.argsort()[-10:][::-1]
+
+    matches = []
+    for match in idxs:
+        matches.append(database[match])
+
+    return matches, idxs, text
+
+
+def detect_text_google(img):
+    """Detects text in the file."""
+    client = vision.ImageAnnotatorClient()
+
+    # with io.open(path, "rb") as image_file:
+    #     content = image_file.read()
+
+    image = vision.types.Image(content=cv2.imencode(".jpg", img)[1].tostring())
+
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+
+    return texts[0].description.strip("\n")
 
 
 def main():
 
-    author_to_image = OrderedDict()
     data = sorted(glob.glob("data/dataset/bbdd/*.jpg"))
     text_files = sorted(glob.glob("data/dataset/bbdd_text/*.txt"))
-    for i, f in enumerate(text_files):
-        text = open(f, "r").readlines()
-        if text:
-            author = text[0].split(",")[0].strip("('")
-            author_to_image[i] = author
-        else:
-            author_to_image[i] = None
-
     query = sorted(glob.glob("data/dataset/qsd1_w3/*.jpg"))
-    for img in query:
-        text = detect_text(cv2.imread(img))
-        text = " ".join(text)
-        tokens = [
-            fuzz.token_sort_ratio(text, author) if author is not None else 0
-            for author in author_to_image.values()
-        ]
-        top10 = np.argpartition(np.array(tokens), -10)[-10:]
+    gt = sorted(glob.glob("data/dataset/qsd1_w3/*.pkl"))
+    has_gt = bool(gt)
+
+    images = []
+    print("Loading Images")
+    for path in tqdm(data, total=len(data)):
+        images.append(cv2.imread(path))
+
+    author_to_image = get_authors(text_files)
+
+    print("Processing Query Set")
+    for img in tqdm(query, total=len(query)):
+        matches = retrieve_matches(img, images, author_to_image)
+
 
 if __name__ == "__main__":
 
