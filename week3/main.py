@@ -117,11 +117,12 @@ def main():
             os.path.join(args.output, "preds_{}.pkl".format(args.query)), preds
         )
 
-        with open(
-            os.path.join(args.output, "authors_{}.txt".format(args.query)), "w"
-        ) as f:
-            for author in authors:
-                f.write(author + "\n")
+        if "text" in args.pipeline:
+            with open(
+                os.path.join(args.output, "authors_{}.txt".format(args.query)), "w"
+            ) as f:
+                for author in authors:
+                    f.write(author + "\n")
 
 
 if __name__ == "__main__":
