@@ -10,7 +10,7 @@ from similarity.normalized_levenshtein import NormalizedLevenshtein
 def retrieve_matches(img, database, author_to_image):
 
     normalized_levenshtein = NormalizedLevenshtein()
-    text, boxes = detect_text(img)
+    text = detect_text(img)
     sims = []
     for word in text:
         sims.append(
@@ -25,19 +25,14 @@ def retrieve_matches(img, database, author_to_image):
     argmax = sorted(range(len(sims)), key=lambda x: sims[x].sum())[-1]
     idxs = np.where(ssims[-1] > 0.5)[0]
     author = text[argmax]
-    box = boxes[argmax] + boxes[argmax + len(author.split()) - 1]
-    coords_x = sorted(box, key=lambda x: x[0])
-    coords_y = sorted(box, key=lambda x: x[1])
-    coords = [coords_y[0][1], coords_y[-1][1], coords_x[0][0], coords_x[-1][0]]
-    offset_x = 0#int(abs(coords[2] - coords[3]))
-    offset_y = 0#int(abs(coords[0] - coords[1]))
-    mask = np.ones(img.shape[:2])
-    mask[coords[0] - offset_y:coords[1]+offset_y, coords[2]-offset_x:coords[3]+offset_x] = 0
-    cv2.imshow("mask", mask)
-    cv2.imshow("img", img)
-    cv2.imshow("2", (img * mask[..., None]).astype("uint8"))
-    cv2.waitKey(0)
-
+    # box = boxes[argmax] + boxes[argmax + len(author.split()) - 1]
+    # coords_x = sorted(box, key=lambda x: x[0])
+    # coords_y = sorted(box, key=lambda x: x[1])
+    # coords = [coords_y[0][1], coords_y[-1][1], coords_x[0][0], coords_x[-1][0]]
+    # offset_x = 0#int(abs(coords[2] - coords[3]))
+    # offset_y = 0#int(abs(coords[0] - coords[1]))
+    # mask = np.ones(img.shape[:2])
+    # mask[coords[0] - offset_y:coords[1]+offset_y, coords[2]-offset_x:coords[3]+offset_x] = 0
 
 
     # if no high confidence match was found get the 10 highest
@@ -67,7 +62,7 @@ def detect_text(img):
 
     text = texts[0].description.split("\n")
 
-    return text, vertices[1:]
+    return text
 
 
 def main():
