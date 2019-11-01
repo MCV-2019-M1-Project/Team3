@@ -217,6 +217,7 @@ def remove_bg_improved(img, **kwargs):
         "sigma": 0.5,
     }
 
+
     contrast = kwargs["contrast"]
     brightness = kwargs["brightness"]
     iterations = kwargs["iters"]
