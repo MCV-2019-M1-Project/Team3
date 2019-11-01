@@ -85,7 +85,11 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--save_denoised_picture", type=str, default="True", help="path to save the results"
+        "--apply_denoise", action="store_true", help="whether apply denoise"
+    )
+
+    parser.add_argument(
+        "--save_denoised_picture", action="store_true", help="path to save the results"
     )
 
     parser.add_argument(

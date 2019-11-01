@@ -10,6 +10,9 @@ from skimage.restoration import estimate_sigma
 
 def denoise_set(loader, opt):
     Noise_level_list=[]
+    log_denoise = os.path.join(os.path.join(opt.output, loader.root.split("/")[-1]), "log_denoise.txt")
+    log_file = open(log_denoise, "a")
+    print(opt, file=log_file)
     for name, im, gt_mask in loader:
         #delect noise
         im, Noise_level_before, Noise_level_after, blur_type_last = detect_denoise(im, opt.blur_type)
@@ -17,25 +20,28 @@ def denoise_set(loader, opt):
         if opt.save_denoised_picture:
             save_pic(name.replace(test_1_3.root.split("/")[0], opt.output), im)
 
+        print(name, Noise_level_before, Noise_level_after, blur_type_last, file=log_file)
     return
 
 def detect_denoise(im, blur_type):
     #delect noise
     Noise_level_before=estimate_sigma(im,average_sigmas=True,multichannel=True)
 
+    size_core = 3
+
     if Noise_level_before > 3.0:
         if blur_type == "GaussianBlur":
             blur_type_last = "GaussianBlur"
-            im = cv2.GaussianBlur(im, (3, 3), 0)
+            im = cv2.GaussianBlur(im, (size_core, size_core), 0)
         elif blur_type == "medianBlur":
             blur_type_last = "medianBlur"
-            im = cv2.medianBlur(im, 3)
+            im = cv2.medianBlur(im, size_core)
         elif blur_type == "blur":
             blur_type_last = "blur"
-            im = cv2.blur(im,(3,3))
+            im = cv2.blur(im,(size_core,size_core))
         elif blur_type == "bilateralFilter":
             blur_type_last = "bilateralFilter"
-            im = cv2.bilateralFilter(im, 7, 50, 50)
+            im = cv2.bilateralFilter(im, size_core, 50, 50)
         elif blur_type == "best":
             Noise_level_after = 1000.0
             blur_type_last = "best"
@@ -69,7 +75,8 @@ if __name__ == '__main__':
     opt.color = "RGB"
     opt.bins = 256
     opt.concat = True
-    opt.blur_type = "medianBlur"
+    opt.blur_type = "bilateralFilter"
+    opt.save_denoised_picture = True
 
     os.chdir("..")
     mkdir(opt.output)

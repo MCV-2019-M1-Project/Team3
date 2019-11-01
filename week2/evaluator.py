@@ -9,6 +9,7 @@ from opt import parse_args
 from utils import save_mask, load_pickle, save_predictions, detect_bboxes, detect_paintings, mkdir, transform_color, \
     remove_bg
 import os
+from denoise import detect_denoise
 
 
 def calc_FV(image, opt, mask=None):
@@ -24,6 +25,8 @@ def eval_set(loader, gt_correspondences, bbdd_fvs, opt):
     predictions = []
     set_bboxes = []
     for name, query_image, gt_mask in loader:
+        if opt.apply_denoise:
+            query_image, Noise_level_before, Noise_level_after, blur_type_last = detect_denoise(query_image, opt.blur_type)
         # transform to another color space
         multiple_painting, split_point, bg_mask = detect_paintings(query_image)
         bboxes, bbox_mask = detect_bboxes(query_image)
@@ -87,6 +90,15 @@ def calc_mask_metrics(out_dict, gt_mask, pred_mask):
 
 if __name__ == '__main__':
     opt = parse_args()
+
+    opt.histogram = "multiresolution"
+    opt.dist = "intersection"
+    opt.mr_splits = [5, 5]
+    opt.color = "RGB"
+    opt.bins = 256
+    opt.concat = True
+
+
     os.chdir("..")
     mkdir(opt.output)
     log = os.path.join(opt.output, "log.txt")
@@ -95,6 +107,7 @@ if __name__ == '__main__':
 
     train = Dataloader("data/bbdd")
 
+    '''
     test_1_1 = Dataloader("data/qsd1_w1", evaluate=True)
     gt_1_1 = load_pickle("data/qsd1_w1/gt_corresps.pkl")
     mkdir(os.path.join(opt.output, test_1_1.root.split("/")[-1]))
@@ -106,38 +119,79 @@ if __name__ == '__main__':
     test_1_2 = Dataloader("data/qsd1_w2", detect_bboxes=True, evaluate=True)
     gt_1_2 = load_pickle("data/qsd1_w2/gt_corresps.pkl")
     mkdir(os.path.join(opt.output, test_1_2.root.split("/")[-1]))
-
+    
     test_2_2 = Dataloader("data/qsd2_w2", compute_masks=True, detect_bboxes=True, evaluate=True)
     gt_2_2 = load_pickle("data/qsd2_w2/gt_corresps.pkl")
     mkdir(os.path.join(opt.output, test_2_2.root.split("/")[-1]))
-
+    
     testset_1_2 = Dataloader("data/qst1_w2", detect_bboxes=True)
     mkdir(os.path.join(opt.output, testset_1_2.root.split("/")[-1]))
 
     testset_2_2 = Dataloader("data/qst2_w2", compute_masks=True, detect_bboxes=True)
     mkdir(os.path.join(opt.output, testset_2_2.root.split("/")[-1]))
-
+    '''
     bbdd_matrix = np.array(
         [calc_FV(
             transform_color(image, opt.color) if opt.color is not None else image, opt).ravel()
                 for _, image, _ in train
          ])
     print("Train sample loaded", bbdd_matrix.shape)
-
+    '''
     print(test_1_1.root, file=log_file)
-    print(eval_set(test_1_1, gt_1_1, bbdd_matrix, opt), file=log_file)
+    result = eval_set(test_1_1, gt_1_1, bbdd_matrix, opt)
+    print(result, file=log_file)
+
 
     print(test_2_1.root, file=log_file)
-    print(eval_set(test_2_1, gt_2_1, bbdd_matrix, opt), file=log_file)
+    result = eval_set(test_2_1, gt_2_1, bbdd_matrix, opt)
+    print(result, file=log_file)
 
     print(test_1_2.root, file=log_file)
     print(eval_set(test_1_2, gt_1_2, bbdd_matrix, opt), file=log_file)
-
+    
     print(test_2_2.root, file=log_file)
-    print(eval_set(test_2_2, gt_2_2, bbdd_matrix, opt), file=log_file)
-
+    result = eval_set(test_2_2, gt_2_2, bbdd_matrix, opt)
+    print(result)
+    print(result, file=log_file)
+    
     print(testset_1_2.root, file=log_file)
     print(eval_set(testset_1_2, None, bbdd_matrix, opt), file=log_file)
 
     print(testset_2_2.root, file=log_file)
     print(eval_set(testset_2_2, None, bbdd_matrix, opt), file=log_file)
+    '''
+
+    '''
+    test_2_2 = Dataloader("data/qsd2_w2", compute_masks=True, detect_bboxes=True, evaluate=True)
+    gt_2_2 = load_pickle("data/qsd2_w2/gt_corresps.pkl")
+    mkdir(os.path.join(opt.output, test_2_2.root.split("/")[-1]))
+
+    print(test_2_2.root, file=log_file)
+    result = eval_set(test_2_2, gt_2_2, bbdd_matrix, opt)
+    print(result)
+    print(result, file=log_file)
+    '''
+
+    test_1_3 = Dataloader("data/qsd1_w3", detect_bboxes=True, evaluate=True)
+    gt_1_3 = load_pickle("data/qsd1_w3/gt_corresps.pkl")
+    mkdir(os.path.join(opt.output, test_1_3.root.split("/")[-1]))
+
+    test_2_3 = Dataloader("data/qsd2_w3", compute_masks=True, detect_bboxes=True, evaluate=True)
+    gt_2_3 = load_pickle("data/qsd2_w3/gt_corresps.pkl")
+    mkdir(os.path.join(opt.output, test_2_3.root.split("/")[-1]))
+
+    opt.apply_denoise = False
+    for blur_type in ["GaussianBlur", "medianBlur", "bilateralFilter", "blur", "best"]:
+    #for blur_type in ["blur"]:
+        opt.blur_type = blur_type
+        print(opt, file=log_file)
+
+        print(test_1_3.root, file=log_file)
+        result = eval_set(test_1_3, gt_1_3, bbdd_matrix, opt)
+        print(result)
+        print(result, file=log_file)
+
+        print(test_2_3.root, file=log_file)
+        result = eval_set(test_2_3, gt_2_3, bbdd_matrix, opt)
+        print(result)
+        print(result, file=log_file)
