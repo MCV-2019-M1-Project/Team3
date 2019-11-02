@@ -37,7 +37,7 @@ def detect_denoise(im, blur_type):
             im = cv2.GaussianBlur(im, (3, 3), 0)
         elif blur_type == "medianBlur":
             blur_type_last = "medianBlur"
-            im = cv2.medianBlur(im, 3)
+            im = cv2.medianBlur(im, 5)
         elif blur_type == "blur":
             blur_type_last = "blur"
             im = cv2.blur(im, (3, 3))
