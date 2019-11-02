@@ -37,7 +37,7 @@ def detect_denoise(im, blur_type):
             im = cv2.GaussianBlur(im, (3, 3), 0)
         elif blur_type == "medianBlur":
             blur_type_last = "medianBlur"
-            im = cv2.medianBlur(im, 3)
+            im = cv2.medianBlur(im, 5)
         elif blur_type == "blur":
             blur_type_last = "blur"
             im = cv2.blur(im, (3, 3))
@@ -87,8 +87,15 @@ def detect_paintings(img):
     sx_mid = np.int(sx / 2)
     sy_mid = np.int(sy / 2)
 
+    from matplotlib import pyplot as plt
     image_bg = remove_bg(img)
     lab = measure.label(image_bg)
+
+    if False:
+        plt.imshow(img)
+        plt.show()
+        plt.imshow(image_bg)
+        plt.show()
 
     if np.max(lab) > 1:
         split_point = np.argmax(lab[sx_mid, :])

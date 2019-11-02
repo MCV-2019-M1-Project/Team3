@@ -8,7 +8,7 @@ def parse_args():
         "--root_folder", type=str, default="data/dataset/", help="Dataset root folder"
     )
 
-    parser.add_argument("--query", default="qsd1_w3", help="query set to evaluate")
+    parser.add_argument("--query", default="qsd1_w4", help="query set to evaluate")
 
     parser.add_argument("--save", action="store_true", help="whether to save results")
 

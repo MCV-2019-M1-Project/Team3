@@ -55,16 +55,15 @@ def loc_bin_pat(im, bins=50):
     return hist_im
 
 
-def compute_image_dct(image, block_size=64, num_coefs=10, mask=None):
-
+def compute_image_dct(image, block_size=64, num_coefs=10):
     image = cv2.resize(image, (512, 512))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     dct_out = []
-    for x_block in np.r_[: image.shape[0] : block_size]:
-        for y_block in np.r_[: image.shape[1] : block_size]:
+    for x_block in np.r_[: image.shape[0]: block_size]:
+        for y_block in np.r_[: image.shape[1]: block_size]:
             dct_im = cv2.dct(
-                image[x_block : x_block + block_size, y_block : y_block + block_size]
+                image[x_block: x_block + block_size, y_block: y_block + block_size]
                 / 255
             )
             dct_coffs = np.concatenate(
@@ -80,7 +79,6 @@ def compute_image_dct(image, block_size=64, num_coefs=10, mask=None):
 
 
 def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, concat=False):
-
     x_splits, y_splits = splits
     x_len = int(img.shape[0] / x_splits)
     y_len = int(img.shape[1] / y_splits)
@@ -89,12 +87,12 @@ def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, co
 
     for i in range(x_splits):
         for j in range(y_splits):
-            small_img = img[i * x_len : (i + 1) * x_len, j * y_len : (j + 1) * y_len]
+            small_img = img[i * x_len: (i + 1) * x_len, j * y_len: (j + 1) * y_len]
             small_mask = None
             if mask is not None:
                 small_mask = mask[
-                    i * x_len : (i + 1) * x_len, j * y_len : (j + 1) * y_len
-                ].astype("bool")
+                             i * x_len: (i + 1) * x_len, j * y_len: (j + 1) * y_len
+                             ].astype("bool")
             if concat:
                 if len(small_img.shape) == 3:
                     small_hist = np.array(
@@ -119,3 +117,44 @@ def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, co
 
     histograms = [np.sqrt(hist) if sqrt else hist for hist in histograms]
     return np.concatenate(histograms, axis=0)
+
+
+def surf_descriptor(image):
+    hessianThreshold = 1000
+    nOctaves = 8
+    nOctaveLayers = 4
+    extended = True
+    upright = False
+    surf = cv2.xfeatures2d.SURF_create(hessianThreshold, nOctaves, nOctaveLayers, extended, upright)
+
+    image = cv2.resize(image, (512,512))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    kkpp, descriptors = surf.detectAndCompute(image, None)
+    keypoints = np.array([k.pt for k in kkpp])
+    return keypoints, descriptors
+
+
+def filter_matches(matches, similarity_factor=0.7):
+    filtered = []
+    for orig, match in matches:
+        if orig.distance < match.distance * similarity_factor:
+            filtered.append(orig)
+
+    return filtered
+
+
+def calculate_match_dist(matches, min_matches=10, ):
+    if len(matches) < min_matches:
+        # print(np.inf)
+        return np.inf
+    else:
+        distances = [match.distance for match in matches]
+        mean = np.mean(distances)
+        std = np.std(distances)
+        # print(len(matches) / (mean + std))
+        return len(matches) / min((mean - std), 1)
+
+
+def compare_keypoints(train_desc, query_desc):
+    matches = cv2.BFMatcher(cv2.NORM_L1).knnMatch(train_desc, query_desc, k=2)
+    return matches

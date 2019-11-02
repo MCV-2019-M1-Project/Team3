@@ -3,18 +3,21 @@ import warnings
 
 from tqdm import tqdm
 import numpy as np
+from matplotlib import pyplot as plt
+import cv2
 
 from detect_text import retrieve_matches
 from opt import parse_args
 from data.data import load_data
 from utils import detect_denoise, group_paintings, save_predictions, mkdir
-from features import compare_ssim, loc_bin_pat, compute_image_dct, compute_mr_histogram
+from features import compare_ssim, loc_bin_pat, compute_image_dct, compute_mr_histogram, surf_descriptor, \
+    compare_keypoints, filter_matches, calculate_match_dist
+from keypoints import *
 from metrics import mapk, sort
 from distances import calculate_distances
 
 
 def main():
-
     args = parse_args()
 
     mkdir(args.output)
@@ -23,13 +26,10 @@ def main():
     print(args.__dict__)
     print(args.__dict__, file=open(log_path, "a"))
 
-    if "d2" in args.query or "t2" in args.query:
-        process_bg = True
-    else:
-        process_bg = False
+    process_bg = True
 
-    if any([p not in ["lbp", "text", "color", "dct", "ssim"] for p in args.pipeline]):
-        valid = '"lbp, "text", "color", "dct", "ssim"'
+    if any([p not in ["lbp", "text", "color", "dct", "ssim", "surf"] for p in args.pipeline]):
+        valid = '"lbp, "text", "color", "dct", "ssim" "surf"'
         raise ValueError(
             "Invalid option in pipeline. Expected any combination of {} but got {}".format(
                 valid, args.pipeline
@@ -46,15 +46,21 @@ def main():
     print("Processing Query Set")
     for img in tqdm(query, total=len(query)):
 
+        img = cv2.resize(img, (1024,1024))
+        # Denoise
+        img, _, _, _, = detect_denoise(img, blur_type="best")
+
         paintings = group_paintings(img, process_bg)
         im_preds = []
 
         for img in paintings:
+            # if True:
+            #     plt.imshow(img)
+            #     plt.show()
 
             dists = []
 
-            # Denoise
-            img, _, _, _, = detect_denoise(img, blur_type="best")
+
 
             # Reduce search by matching authors
             if "text" in args.pipeline:
@@ -85,6 +91,10 @@ def main():
                 extractor = compute_mr_histogram
                 distance = "intersection"
 
+            elif "surf" in args.pipeline:
+                extractor = lambda x: x
+                distance = None
+
             f2 = extractor(img)[None, ...]
 
             # Perform Retrieval
@@ -93,6 +103,14 @@ def main():
 
                     if "ssim" in args.pipeline:
                         dist = compare_ssim(match, img.squeeze())
+
+                    elif "surf" in args.pipeline:
+                        image_key_points, image_descriptor = surf_descriptor(img.squeeze())
+                        match_key_points, match_descriptor = surf_descriptor(match)
+                        im_matches = compare_keypoints(match_descriptor, image_descriptor)
+
+                        im_matches = filter_matches(im_matches)
+                        dist = calculate_match_dist(im_matches)
 
                     else:
                         f1 = extractor(match)[None, ...]
@@ -103,16 +121,24 @@ def main():
                     # replace if only text prediction
                     im_preds[-1] = idxs[sort(dists)].astype("int").tolist()
 
+                if all(dist == np.inf for dist in dists):
+                    im_preds[-1] = [-1]
+
         preds.append(im_preds)
+        print(im_preds)
 
     if has_gt:
         gt_flat = [[val] for p in gt for val in p]
         preds_flat = [val for p in preds for val in p]
-        maps = [mapk(gt_flat, preds_flat, k=i) for i in [1, 3]]
+        maps = [mapk(gt_flat, preds_flat, k=i) for i in [1, 3, 5, 10]]
         print("Map@{}: {}".format(1, maps[0]))
         print("Map@{}: {}".format(1, maps[0]), file=open(log_path, "a"))
         print("Map@{}: {}".format(3, maps[1]))
         print("Map@{}: {}".format(3, maps[1]), file=open(log_path, "a"))
+        print("Map@{}: {}".format(5, maps[2]))
+        print("Map@{}: {}".format(5, maps[2]), file=open(log_path, "a"))
+        print("Map@{}: {}".format(10, maps[3]))
+        print("Map@{}: {}".format(10, maps[3]), file=open(log_path, "a"))
 
     if args.save:
 
@@ -122,12 +148,11 @@ def main():
 
         if "text" in args.pipeline:
             with open(
-                os.path.join(args.output, "authors_{}.txt".format(args.query)), "w"
+                    os.path.join(args.output, "authors_{}.txt".format(args.query)), "w"
             ) as f:
                 for author in authors:
                     f.write(author + "\n")
 
 
 if __name__ == "__main__":
-
     main()
