@@ -91,11 +91,11 @@ def detect_paintings(img):
     image_bg = remove_bg(img)
     lab = measure.label(image_bg)
 
-    if False:
-        plt.imshow(img)
-        plt.show()
-        plt.imshow(image_bg)
-        plt.show()
+    # if True:
+    #     plt.imshow(img)
+    #     plt.show()
+    #     plt.imshow(image_bg)
+    #     plt.show()
 
     if np.max(lab) > 1:
         split_point = np.argmax(lab[sx_mid, :])
@@ -111,7 +111,6 @@ def detect_paintings(img):
 
 
 def group_paintings(img, process_bg):
-
     paintings = [img]
     if process_bg:
         group, split_point, mask = detect_paintings(img)

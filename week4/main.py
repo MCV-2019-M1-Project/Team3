@@ -45,8 +45,7 @@ def main():
 
     print("Processing Query Set")
     for img in tqdm(query, total=len(query)):
-
-        img = cv2.resize(img, (1024,1024))
+        img = cv2.resize(img, min((1024,1024), img.shape[:2]))
         # Denoise
         img, _, _, _, = detect_denoise(img, blur_type="best")
 

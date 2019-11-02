@@ -121,13 +121,13 @@ def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, co
 
 def surf_descriptor(image):
     hessianThreshold = 1000
-    nOctaves = 8
-    nOctaveLayers = 4
+    nOctaves = 12
+    nOctaveLayers = 6
     extended = True
     upright = False
     surf = cv2.xfeatures2d.SURF_create(hessianThreshold, nOctaves, nOctaveLayers, extended, upright)
 
-    image = cv2.resize(image, (512,512))
+    image = cv2.resize(image, min((512,512), image.shape[:2]))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     kkpp, descriptors = surf.detectAndCompute(image, None)
     keypoints = np.array([k.pt for k in kkpp])
@@ -143,7 +143,7 @@ def filter_matches(matches, similarity_factor=0.7):
     return filtered
 
 
-def calculate_match_dist(matches, min_matches=10, ):
+def calculate_match_dist(matches, min_matches=13, ):
     if len(matches) < min_matches:
         # print(np.inf)
         return np.inf
