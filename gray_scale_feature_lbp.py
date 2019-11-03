@@ -42,25 +42,6 @@ def check_kp(im, kp):
     im_rec = im[kp[0]-p:kp[0]+p, kp[1]-p:kp[1]+p]
     return im_rec   
 
-
-def feature_descriptor_old(im_rec):
-    """
-    Args:
-        im: grayscale image
-        kp: key point, x and y coordinates of the grayscale image
-    """       
-    n_bins = 12
-    hist = np.histogram(im_rec, n_bins, density = True)[0]
-    return hist
-
-
-def feature_descriptor2(im_rec):
-    """
-    Args:
-        im: grayscale image
-        kp: key point, x and y coordinates of the grayscale image
-    """       
-    return np.ravel(im_rec)
   
 
 def feature_descriptor(im_rec):
@@ -126,8 +107,8 @@ for img in images:
         img11 = utils.cut_image_gray(image_bg[:, :add], img[:, :add])
         img12 = utils.cut_image_gray(image_bg[:, add:], img[:, add:])
         
-        img11 = np.float32(cv2.resize(img11, (400,400)))
-        img12 = np.float32(cv2.resize(img12, (400,400)))
+        img11 = np.float32(cv2.resize(img11, (500,500)))
+        img12 = np.float32(cv2.resize(img12, (500,500)))
 
         kp1 = keypoints2(img11)
         for i in range(0,np.shape(kp1)[0]):
@@ -144,7 +125,7 @@ for img in images:
     else:
         lbp_hist = []
         img = utils.cut_image_gray(image_bg, img)
-        img = np.float32(cv2.resize(img, (400,400)))
+        img = np.float32(cv2.resize(img, (500,500)))
         
 
         kp = keypoints2(img)
@@ -163,7 +144,7 @@ lbp_hist_d = []
 count = 0
 for im in dataset:
     im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-    im = np.float32(cv2.resize(im, (400,400)))
+    im = np.float32(cv2.resize(im, (500,500)))
     kp = keypoints2(im)
     lbp_hist = []
     for i in range(0,np.shape(kp)[0]):
@@ -260,7 +241,7 @@ for i in range(0,39):
 #    print(i)
 #    print(np.argsort(-np.sqrt(crit[i,:,0]**2+1.0*crit[i,:,1]**2))[:10].tolist())
 #    print((-np.sort(-np.sqrt(crit[i,:,0]**2+1.0*crit[i,:,1]**2))[:10]).tolist())
-    if np.max(crit[i,:,1])<90:
+    if np.max(np.sqrt(crit[i,:,0]**2+1.0*crit[i,:,1]**2))<117:
         preds2.append(np.concatenate((np.array([-1]), 
                       np.argsort(-np.sqrt(crit[i,:,0]**2+1.7*crit[i,:,1]**2))[:9])).tolist())
     else:
