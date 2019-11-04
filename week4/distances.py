@@ -1,4 +1,7 @@
 import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
 
 def values(hist_dataset, hist_im_query_ini):
     """
@@ -12,7 +15,6 @@ def values(hist_dataset, hist_im_query_ini):
         return hist_im_query_ini
 
     nim_dataset, nvals_dataset = np.shape(hist_dataset)
-
 
     size_shape = np.shape(np.shape(hist_im_query_ini))[0]
     if size_shape == 1:
@@ -96,7 +98,7 @@ def intersection(hist_dataset, hist_im_query):
     """
 
     hist_im_query = values(hist_dataset, hist_im_query)
-    distance = 1/(np.sum(np.minimum(hist_dataset, hist_im_query), axis=1))
+    distance = 1 / (np.sum(np.minimum(hist_dataset, hist_im_query), axis=1))
     return distance
 
 
@@ -111,7 +113,7 @@ def hellinger(hist_dataset, hist_im_query):
     """
     eps = 0.000001
     hist_im_query = values(hist_dataset, hist_im_query)
-    distance = 1/(np.sum(np.sqrt(hist_dataset * hist_im_query), axis=1)+eps)
+    distance = 1 / (np.sum(np.sqrt(hist_dataset * hist_im_query), axis=1) + eps)
     return distance
 
 
@@ -128,8 +130,7 @@ def kl_divergence(hist_dataset, hist_im_query):
     hist_im_query = values(hist_dataset, hist_im_query)
     eps = 0.000001
     distance = np.sum(
-        hist_im_query * np.log((hist_im_query + eps) / (hist_dataset + eps)),
-        axis=1,
+        hist_im_query * np.log((hist_im_query + eps) / (hist_dataset + eps)), axis=1
     )
     return distance
 
@@ -157,11 +158,8 @@ def js_divergence(hist_dataset, hist_im_query):
 
     hist_im_query = values(hist_dataset, hist_im_query)
     eps = 0.00001
-    distance = shannon_entropy(
-        1 / 2 * (hist_dataset + hist_im_query) + eps
-    ) - 1 / 2 * (
-        shannon_entropy(hist_dataset + eps)
-        + shannon_entropy(hist_im_query + eps)
+    distance = shannon_entropy(1 / 2 * (hist_dataset + hist_im_query) + eps) - 1 / 2 * (
+        shannon_entropy(hist_dataset + eps) + shannon_entropy(hist_im_query + eps)
     )
     return distance
 
@@ -176,6 +174,8 @@ def calculate_distances(hist_dataset, hist_im_query, mode="euclidean"):
         mode: str with method mode
     Returns: Matrix containing n distances calculated with 'mode'
     """
+    if mode == "desc":
+        return descriptor(hist_dataset, hist_im_query)
     if mode == "euclidean":
         return euclidean(hist_dataset, hist_im_query)
     elif mode == "distance_L":

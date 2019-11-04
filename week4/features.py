@@ -3,6 +3,9 @@ import cv2
 import numpy as np
 from skimage import feature
 from utils import cut_image
+import torch
+import kornia
+from torchvision.transforms import ToTensor
 
 
 def compare_ssim(im1, im2):
@@ -79,7 +82,9 @@ def compute_image_dct(image, block_size=64, num_coefs=10, mask=None):
     return np.array(dct_out).ravel()
 
 
-def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, concat=False):
+def compute_mr_histogram(
+    img, splits=(1, 1), bins=256, mask=None, sqrt=False, concat=False
+):
 
     x_splits, y_splits = splits
     x_len = int(img.shape[0] / x_splits)
@@ -119,3 +124,70 @@ def compute_mr_histogram(img, splits=(1, 1), bins=256, mask=None, sqrt=False, co
 
     histograms = [np.sqrt(hist) if sqrt else hist for hist in histograms]
     return np.concatenate(histograms, axis=0)
+
+
+def surf_descriptor(image):
+    hessianThreshold = 1000
+    nOctaves = 12
+    nOctaveLayers = 6
+    extended = True
+    upright = False
+    surf = cv2.xfeatures2d.SURF_create(
+        hessianThreshold, nOctaves, nOctaveLayers, extended, upright
+    )
+
+    image = cv2.resize(image, min((512, 512), image.shape[:2]))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    kkpp, descriptors = surf.detectAndCompute(image, None)
+    keypoints = np.array([k.pt for k in kkpp])
+
+    return keypoints, descriptors
+
+def sift_descriptor(image, octave_layers=3, nfeatures=0, contrast=0.04, edge=10, sigma=1.6):
+
+    sift = cv2.xfeatures2d.SIFT_create(nfeatures, octave_layers, contrast, edge, sigma)
+
+    image = cv2.resize(image, min((512, 512), image.shape[:2]))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    kkpp, descriptors = sift.detectAndCompute(image, None)
+
+    keypoints = np.array([k.pt for k in kkpp])
+
+    return keypoints, descriptors
+
+
+def orb_descriptor(image):
+
+    orb = cv2.ORB_create()
+
+    image = cv2.resize(image, min((512, 512), image.shape[:2]))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    kkpp, descriptors = orb.detectAndCompute(image, None)
+
+    keypoints = np.array([k.pt for k in kkpp])
+
+    return keypoints, descriptors
+
+
+def filter_matches(matches, similarity_factor=0.7):
+    filtered = []
+    for orig, match in matches:
+        if orig.distance < match.distance * similarity_factor:
+            filtered.append(orig)
+
+    return filtered
+
+
+def calculate_match_dist(matches, min_matches=13):
+    if len(matches) < min_matches:
+        return np.inf
+    else:
+        distances = [match.distance for match in matches]
+        mean = np.mean(distances)
+        std = np.std(distances)
+        return len(matches) / min((mean - std), 1)
+
+
+def compare_keypoints(train_desc, query_desc):
+    matches = cv2.BFMatcher(cv2.NORM_L1).knnMatch(train_desc, query_desc, k=2)
+    return matches
