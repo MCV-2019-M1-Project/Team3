@@ -8,12 +8,12 @@ import pickle
 from skimage.feature import (corner_peaks, corner_harris,
                              local_binary_pattern)
 
-dataset = [cv2.imread(file) for file in glob.glob('C:/Users/Sara/Datos/Master/M1/Project/dataset/*.jpg')]
-images = [cv2.imread(file) for file in glob.glob('C:/Users/Sara/Datos/Master/M1/Project/week4/qsd1_w4/*.jpg')]
+dataset = [cv2.imread(file) for file in glob.glob('E:\GitHub\Team3_2\data/bbdd\*.jpg')]
+images = [cv2.imread(file) for file in glob.glob('E:\GitHub\Team3_2\data\qsd1_w4/*.jpg')]
 
 
 
-f = open('C:/Users/Sara/Datos/Master/M1/Project/week4/qsd1_w4/gt_corresps.pkl','rb')
+f = open('E:\GitHub\Team3_2\data\qsd1_w4/gt_corresps.pkl','rb')
 gt = pickle.load(f)
 #%%
 

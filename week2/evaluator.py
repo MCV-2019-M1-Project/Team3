@@ -97,6 +97,7 @@ if __name__ == '__main__':
     opt.color = "RGB"
     opt.bins = 256
     opt.concat = True
+    opt.save = True
 
 
     os.chdir("..")
@@ -172,24 +173,24 @@ if __name__ == '__main__':
     print(result, file=log_file)
     '''
 
-    test_1_3 = Dataloader("data/qsd1_w3", detect_bboxes=True, evaluate=True)
-    gt_1_3 = load_pickle("data/qsd1_w3/gt_corresps.pkl")
-    mkdir(os.path.join(opt.output, test_1_3.root.split("/")[-1]))
+    # test_1_3 = Dataloader("data/qsd1_w3", detect_bboxes=True, evaluate=True)
+    # gt_1_3 = load_pickle("data/qsd1_w3/gt_corresps.pkl")
+    # mkdir(os.path.join(opt.output, test_1_3.root.split("/")[-1]))
 
-    test_2_3 = Dataloader("data/qsd2_w3", compute_masks=True, detect_bboxes=True, evaluate=True)
-    gt_2_3 = load_pickle("data/qsd2_w3/gt_corresps.pkl")
+    test_2_3 = Dataloader("data/qsd1_w4", compute_masks=True, detect_bboxes=True, evaluate=True)
+    gt_2_3 = load_pickle("data/qsd1_w4/gt_corresps.pkl")
     mkdir(os.path.join(opt.output, test_2_3.root.split("/")[-1]))
 
     opt.apply_denoise = False
-    for blur_type in ["GaussianBlur", "medianBlur", "bilateralFilter", "blur", "best"]:
-    #for blur_type in ["blur"]:
+    #for blur_type in ["GaussianBlur", "medianBlur", "bilateralFilter", "blur", "best"]:
+    for blur_type in ["best"]:
         opt.blur_type = blur_type
         print(opt, file=log_file)
 
-        print(test_1_3.root, file=log_file)
-        result = eval_set(test_1_3, gt_1_3, bbdd_matrix, opt)
-        print(result)
-        print(result, file=log_file)
+        # print(test_1_3.root, file=log_file)
+        # result = eval_set(test_1_3, gt_1_3, bbdd_matrix, opt)
+        # print(result)
+        # print(result, file=log_file)
 
         print(test_2_3.root, file=log_file)
         result = eval_set(test_2_3, gt_2_3, bbdd_matrix, opt)

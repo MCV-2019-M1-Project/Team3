@@ -16,6 +16,12 @@ from distances import calculate_distances
 def main():
 
     args = parse_args()
+    args.pipeline = ["text"]
+    os.chdir("..")
+
+    dir = "E:\GitHub\Team3_2\My First Project-c10e01087b39.json"
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = dir
+    print(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'))
 
     mkdir(args.output)
     log_path = os.path.join(args.output, "log.txt")
@@ -23,10 +29,11 @@ def main():
     print(args.__dict__)
     print(args.__dict__, file=open(log_path, "a"))
 
-    if "d2" in args.query or "t2" in args.query:
-        process_bg = True
-    else:
-        process_bg = False
+    # if "d2" in args.query or "t2" in args.query:
+    #     process_bg = True
+    # else:
+    #     process_bg = False
+    process_bg = True
 
     if any([p not in ["lbp", "text", "color", "dct", "ssim"] for p in args.pipeline]):
         valid = '"lbp, "text", "color", "dct", "ssim"'
