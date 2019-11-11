@@ -94,7 +94,7 @@ def keypoints2(im):
 
 lbp_hist_q = []
 count = 0
-for img in images:
+for img in images[0:1]:
     img, _, _, n = utils.detect_denoise(img, "best")
     multiple_painting, split_point, image_bg = utils.detect_paintings(img)    
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -225,11 +225,11 @@ for qs in range(0,nqs):
     for ds in range(0,nds):
         dist = comp(fqs[qs], fds[ds])
         crit[qs,ds,:] = classif(dist, 0.3, 0.97)
-#    print(qs)
-#    print('all matches', np.argsort(-crit[qs,:,0])[:10])
-#    print('all matches dist', -np.sort(-crit[qs,:,0])[:10])
-#    print('select matches', np.argsort(-crit[qs,:,1])[:10])
-#    print('select matches dist', -np.sort(-crit[qs,:,1])[:10])
+    print(qs)
+    print('all matches', np.argsort(-crit[qs,:,0])[:10])
+    print('all matches dist', -np.sort(-crit[qs,:,0])[:10])
+    print('select matches', np.argsort(-crit[qs,:,1])[:10])
+    print('select matches dist', -np.sort(-crit[qs,:,1])[:10])
     
 #%%
 
@@ -241,11 +241,11 @@ for i in range(0,39):
 #    print(i)
 #    print(np.argsort(-np.sqrt(crit[i,:,0]**2+1.0*crit[i,:,1]**2))[:10].tolist())
 #    print((-np.sort(-np.sqrt(crit[i,:,0]**2+1.0*crit[i,:,1]**2))[:10]).tolist())
-    if np.max(np.sqrt(crit[i,:,0]**2+1.0*crit[i,:,1]**2))<117:
+    if np.max(crit[i,:,1])<100:
         preds2.append(np.concatenate((np.array([-1]), 
-                      np.argsort(-np.sqrt(crit[i,:,0]**2+1.7*crit[i,:,1]**2))[:9])).tolist())
+                      np.argsort(crit[i,:,1])[:9])).tolist())
     else:
-        preds2.append(np.argsort(-np.sqrt(crit[i,:,0]**2+1.7*crit[i,:,1]**2))[:10].tolist())
+        preds2.append(np.argsort(crit[i,:,1])[:10].tolist())
       
 for i in range(0,39):
     ini = np.argsort(-crit[qs,:,0])[:10]
