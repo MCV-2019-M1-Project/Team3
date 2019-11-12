@@ -17,7 +17,7 @@ from features import (
     compare_keypoints,
     filter_matches,
     calculate_match_dist,
-    orb_descriptor, sift_descriptor,
+    orb_descriptor, sift_descriptor, compute_hog,
 )
 from metrics import mapk, sort
 from distances import calculate_distances
@@ -37,7 +37,7 @@ def main():
 
     if any(
         [
-            p not in ["lbp", "text", "color", "dct", "ssim", "surf", "orb", "sift"]
+            p not in ["lbp", "text", "color", "dct", "ssim", "surf", "orb", "sift", "hog"]
             for p in args.pipeline
         ]
     ):
@@ -100,6 +100,10 @@ def main():
                     extractor = compute_image_dct
                     distance = "euclidean"
 
+                elif "hog" in args.pipeline:
+                    extractor = compute_hog
+                    distance = "euclidean"
+
                 elif "color" in args.pipeline:
                     extractor = compute_mr_histogram
                     distance = "intersection"
@@ -156,7 +160,7 @@ def main():
 
                         else:
                             f1 = extractor(match)[None, ...]
-                            dist = calculate_distances(f1, f2, mode="desc")
+                            dist = calculate_distances(f1, f2, mode=distance)[0]
 
                         dists.append(dist)
 

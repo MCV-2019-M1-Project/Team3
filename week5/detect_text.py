@@ -1,10 +1,10 @@
 import glob
 import numpy as np
-from google.cloud import vision
+# from google.cloud import vision
 import io
 import cv2
 from tqdm import tqdm
-from similarity.normalized_levenshtein import NormalizedLevenshtein
+# from similarity.normalized_levenshtein import NormalizedLevenshtein
 
 
 def retrieve_matches(img, database, author_to_image):
