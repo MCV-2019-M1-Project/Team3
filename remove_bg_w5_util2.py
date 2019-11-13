@@ -145,7 +145,7 @@ def mask_label(image):
 
 
 
-def rotation(image,label,  mask):
+def rotation(image, label,  mask):
     """
     From a global image on the dataset it determines the rotation angle
     and rotates the image.
@@ -170,12 +170,13 @@ def rotation(image,label,  mask):
         rotated_im = imutils.rotate(image, freqa[1])
         
         label = Image.fromarray(np.uint8(label))
-        rotated_label = label.rotate( -freqa[1], resample = PIL.Image.NEAREST)
+        rotated_label = label.rotate( freqa[1], resample = PIL.Image.NEAREST)
         rotated_label = np.asarray(rotated_label)
         
         mask = Image.fromarray(np.uint8(mask))
-        rotated_mask = mask.rotate( -freqa[1], resample = PIL.Image.NEAREST)
+        rotated_mask = mask.rotate( freqa[1], resample = PIL.Image.NEAREST)
         rotated_mask = np.asarray(rotated_mask)
+        back_rot_angle = -freqa[1]
     else:
         rot_angle = np.abs(freqa[0]).astype(float)
         rotated_im = imutils.rotate(image, -rot_angle)
@@ -187,8 +188,25 @@ def rotation(image,label,  mask):
         mask = Image.fromarray(np.uint8(mask))
         rotated_mask = mask.rotate( -rot_angle, resample = PIL.Image.NEAREST)
         rotated_mask = np.asarray(rotated_mask)
+        back_rot_angle = rot_angle
         
-    return rot_angle, rotated_im, rotated_label, rotated_mask
+    return rot_angle, rotated_im, rotated_label, rotated_mask, back_rot_angle
+
+
+def rotate_around_point_lowperf(point, radians, origin=(0, 0)):
+    """Rotate a point around a given point.
+    
+    I call this the "low performance" version since it's recalculating
+    the same values more than once [cos(radians), sin(radians), x-ox, y-oy).
+    It's more readable than the next function, though.
+    """
+    x, y = point
+    ox, oy = origin
+
+    qx = ox + np.cos(radians) * (x - ox) + np.sin(radians) * (y - oy)
+    qy = oy + -np.sin(radians) * (x - ox) + np.cos(radians) * (y - oy)
+
+    return qx, qy
 
 
 
@@ -204,28 +222,33 @@ def detect_paintings(label):
         num_paintings: number of paintings in the image
         args: Arguments of the left or bottom side of each painting
     """
-    args = np.array([]).astype(int)
+    args_r = np.array([]).astype(int)
     sx, sy = np.shape(label)[:2]
     sxm = np.int(sx/2)
     sym = np.int(sy/2)
     num_paintings = np.max(label)
-    if num_paintings==1:
-        num_paintings = 1
-        return num_paintings, args
+    add = 10
+    if num_paintings==1:          
+        args_r = np.append(args_r,0)
+        vertical = False
+        return num_paintings, args_r, vertical
     else:
        
         for i in range(1, num_paintings+1):
             if sx>sy:
-                line = label[:, sym]
-                arg = np.max(np.where(line==i))
-                args = np.append(args, arg)
+                line_y = label[:, sym]
+                arg_r = np.max(np.where(line_y==i)) + add
+                args_r = np.append(args_r, arg_r)
+                vertical = True
             else:
-                line = label[sxm, :]
-                arg = np.max(np.where(line==i))
-                args = np.append(args, arg)
-        args = np.sort(args)
-        return num_paintings,args
-
+                line_x = label[sxm, :]
+                arg_r = np.max(np.where(line_x==i)) + add
+                args_r = np.append(args_r, arg_r)
+                vertical = False
+        args_r = np.sort(args_r)
+        
+        return num_paintings, args_r, vertical
+    
 
 
 def cut_painting(image, args):
@@ -267,6 +290,7 @@ def cut_painting(image, args):
     return sub_images
 
 
+
 def pres_rec_f1_2(GT, pred):
 
        recall = np.zeros(30)
@@ -284,30 +308,151 @@ def pres_rec_f1_2(GT, pred):
               count = count +1
        return np.mean(precision), np.mean(recall), np.mean(f1)
    
+
     
+def useful_lines(image):
+    """
+    retruns only the lines at 0 and 90 º
+    
+    """
+    sv, sh = np.shape(image)[0:2]
+    print(sv, sh)
+    angs, distan = find_lines(image)
+       
+    select_angs_h = np.array([])
+    select_dist_h = np.array([])
+    x_h =  np.array([])
+    
+    select_angs_v = np.array([])
+    select_dist_v = np.array([])
+    y_v = np.array([])
+    
+    tol = 0.01
+    for alph, dis in zip(angs, distan):
+        if alph>=0-tol and alph<=0+tol:
+            #vertical lines
+            select_angs_v = np.append(select_angs_v, np.array([alph]))   
+            select_dist_v = np.append(select_dist_v, np.array([dis]))   
+            y_v = np.append(y_v, np.array([dis/np.sin(alph)]))
+        if np.abs(alph)>=np.pi/2-tol and np.abs(alph)<=np.pi/2+tol:
+            #Horizontal lines
+            select_angs_h = np.append(select_angs_h, np.array([alph]))        
+            select_dist_h = np.append(select_dist_h, np.array([dis]))   
+            x_h = np.append(x_h, np.array([-dis/np.cos(alph)]))
+        else:
+            pass
+    sort_d_h = np.argsort(np.abs(x_h))
+    select_angs_h = select_angs_h[sort_d_h]
+    select_dist_h = select_dist_h[sort_d_h]
+    
+    sort_d_v = np.argsort(y_v)    
+    select_angs_v = select_angs_v[sort_d_v]
+    select_dist_v = select_dist_v[sort_d_v]
+    
+    return select_angs_h, select_dist_h, select_angs_v, select_dist_v
+
+
+
+def corners_lines(angs_h, dist_h, angs_v, dist_v):
+    #to cartesian coordinates
+    p_corte = np.array([[0,0]])
+    for a_h, d_h in zip(angs_h, dist_h):
+        for a_v, d_v in zip(angs_v, dist_v):
+            a = np.array([[np.cos(a_v)/np.sin(a_v),1],[np.cos(a_h)/np.sin(a_h),1]])
+            b = np.array([d_v/np.sin(a_v), d_h/np.sin(a_h)])
+            x = np.uint(np.linalg.solve(a, b))
+            p_corte = np.concatenate((p_corte, np.array([x])), axis = 0)
+    return p_corte[1:]
+
+
+
+def mask_coordinates(mask, alpha, ox, oy, offset, vertical):
+    """
+    This function returns the coordinates of the masks
+    Args:
+        mask: the cutted mask containing a single painting rotated.
+        alpha: the angle it has been rotated
+        ox, oy: the center of the original image in respect to which the image 
+                was rotated
+        offset: if the cutted mask corresponds to a second or third painting the
+                number that needs to be added to the coordinates
+        vertica: if the paintings are aligned vertically or horizontally
+    return:
+        rot_bounding_cords: the coordinates of a single painting on the image
+    """
+    alpha = alpha*np.pi/180
+    if np.max(mask) != 1:
+        mask = (mask/np.max(mask)).astype(int)
+    else:
+        mask = mask.astype(int)
+        
+    sy, sx = np.shape(mask)
+    sym = np.int(sy/2)
+    sxm = np.int(sx/2)
+    
+    line_x = mask[sym, :]
+    line_y = mask[:, sxm]
+    if vertical == True:
+        r = np.max(np.where(line_x==1))
+        l = np.min(np.where(line_x==1))
+        t = np.min(np.where(line_y==1)) + offset
+        b = np.max(np.where(line_y==1)) + offset
+    else:
+        r = np.max(np.where(line_x==1)) + offset
+        l = np.min(np.where(line_x==1)) + offset
+        t = np.min(np.where(line_y==1)) 
+        b = np.max(np.where(line_y==1)) 
+    
+    bounding_cords = np.array([[l,t], [r,t], [r,b], [l,b]])
+    rot_bounding_cords = np.zeros((4,2))
+    for i in range(0,4):
+        cord = bounding_cords[i]
+        rot_cords = rotate_around_point_lowperf(cord, alpha, origin=(ox, oy))
+        rot_bounding_cords[i,:] = rot_cords
+    return bounding_cords, rot_bounding_cords
+
+    #%%
 images = [cv2.imread(file) for file in glob.glob("C:/Users/Sara/Datos/Master/M1/Project/week5/qsd1_w5/*.jpg")]
 GTS = [cv2.imread(file) for file in glob.glob("C:/Users/Sara/Datos/Master/M1/Project/week5/qsd1_w5/*.png")]
 
+#%%
 #example on an image
-im = images[5]
+im = images[10]
+oy, ox = (np.shape(im)[:2])
+ox = np.int(ox/2)
+oy = np.int(oy/2)
+
 im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 mask, label = mask_label(im)
-rot_angle, rotated_im, rotated_label, rotated_mask = rotation(im, label, mask)
-n_p, args = detect_paintings(rotated_label)
+rot_angle, rotated_im, rotated_label, rotated_mask, back_angle_rot = rotation(im, label, mask)
+n_p, args, vertical = detect_paintings(rotated_label)
 sub_ims = cut_painting(rotated_im, args)
+sub_mask = cut_painting(rotated_mask, args)
 
+plt.imshow(im, cmap = 'gray')
+if n_p == 1:
+    bounding_cords, rot_bounding_cords = mask_coordinates(rotated_mask, back_angle_rot, ox,oy, 0, vertical)
+    plt.plot(rot_bounding_cords[:,0], rot_bounding_cords[:,1], 'o')
+    
+else:
+    for i in range(0,n_p):
+        if i == 0:
+            arg = 0
+        else:
+            arg = args[i-1]
+        bounding_cords, rot_bounding_cords = mask_coordinates(sub_mask[i], back_angle_rot, ox,oy, arg, vertical)
+        plt.plot(rot_bounding_cords[:,0], rot_bounding_cords[:,1], 'o')
+#%%
 
 c = 0
 masks = []
-for im in images:
-    
+for im in images[0:1]:
     im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
     mask, label = mask_label(im)
     masks.append(mask)
 #    imageio.imsave('mask{}.png'.format(c), mask)
     rot_angle, rotated_im, rotated_label, rotated_mask = rotation(im, label, mask)
-    imageio.imsave('rot_im{}.png'.format(c), rotated_im)
-    n_p, args = detect_paintings(rotated_label)
+
     c = c +1
 
 #p,r,f = pres_rec_f1_2(GTS, masks)         
