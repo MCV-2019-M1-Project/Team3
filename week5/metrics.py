@@ -1,5 +1,8 @@
 import numpy as np
 
+def sort(predicted):
+
+    return np.array(predicted).argsort()[:10].astype(int).tolist()
 
 
 def apk(actual, predicted, k=10):
@@ -58,3 +61,47 @@ def mapk(actual, predicted, k=10):
             The mean average precision at k over the input lists
     """
     return np.mean([apk(a, p, k) for a, p in zip(actual, predicted)])
+
+
+def bbox_iou(bboxA, bboxB):
+    # compute the intersection over union of two bboxes
+
+    # Format of the bboxes is [tly, tlx, bry, brx, ...], where tl and br
+    # indicate top-left and bottom-right corners of the bbox respectively.
+
+    # determine the coordinates of the intersection rectangle
+    xA = max(bboxA[1], bboxB[1])
+    yA = max(bboxA[0], bboxB[0])
+    xB = min(bboxA[3], bboxB[3])
+    yB = min(bboxA[2], bboxB[2])
+
+    # compute the area of intersection rectangle
+    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+
+    # compute the area of both bboxes
+    bboxAArea = (bboxA[2] - bboxA[0] + 1) * (bboxA[3] - bboxA[1] + 1)
+    bboxBArea = (bboxB[2] - bboxB[0] + 1) * (bboxB[3] - bboxB[1] + 1)
+
+    iou = interArea / float(bboxAArea + bboxBArea - interArea)
+
+    # return the intersection over union value
+    return iou
+
+def averge_masks_metrics(mask_metrics):
+    for k,v in mask_metrics.items():
+        mask_metrics[k] = np.array(v).mean()
+
+    return mask_metrics
+
+
+def iou_numpy(outputs, labels, smooth=1e-6):
+    outputs = outputs.squeeze(1)
+
+    intersection = (outputs & labels).sum((1, 2))
+    union = (outputs | labels).sum((1, 2))
+
+    iou = (intersection + smooth) / (union + smooth)
+
+    thresholded = np.ceil(np.clip(20 * (iou - 0.5), 0, 10)) / 10
+
+    return thresholded  # Or thresholded.mean()

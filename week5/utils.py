@@ -37,7 +37,7 @@ def detect_denoise(im, blur_type):
             im = cv2.GaussianBlur(im, (3, 3), 0)
         elif blur_type == "medianBlur":
             blur_type_last = "medianBlur"
-            im = cv2.medianBlur(im, 3)
+            im = cv2.medianBlur(im, 5)
         elif blur_type == "blur":
             blur_type_last = "blur"
             im = cv2.blur(im, (3, 3))
@@ -71,7 +71,6 @@ def detect_denoise(im, blur_type):
     Noise_level_after = estimate_sigma(im, average_sigmas=True, multichannel=True)
 
     return im, Noise_level_before, Noise_level_after, blur_type_last
-
 
 
 def detect_paintings(img):
@@ -162,97 +161,6 @@ def remove_bg(img):
     return filled
 
 
-def detect_bbox(image, add):
-    """
-    This function detects the text box of an image and calculates the mask
-    to supress it
-    USE THIS FUNCTION IF THERE IS ONLY ONE!! PAINTING PER IMAGE
-    Args:
-           image: image
-           add: the x coordinate at which we had to cut an image with two
-           paintings.
-    Returns:
-           coord: list of the coordinates of the text box.
-
-           mask: binary image in the zone for the text box
-    """
-    sx, sy = np.shape(image)[:2]
-    ker = np.ones((np.int(sx / 150), np.int(sy / 15)))
-    ker2 = np.ones((15, 9))
-
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-    mask1 = image[:, :, 1] == 128
-    mask2 = image[:, :, 2] == 128
-
-    d = np.uint8((mask1 * mask2) * 255)
-    d = cv2.erode(d, ker, iterations=2)
-    d = cv2.dilate(d, ker, iterations=2)
-    lab = measure.label(d)
-
-    if np.max(lab) > 1:
-        assert (lab.max() != 0)  # assume at least 1 CC
-        d = ((lab == np.argmax(np.bincount(lab.flat)[1:]) + 1) * 1).astype(np.uint8)
-    else:
-        d = d
-
-    d = cv2.dilate(d, ker2, iterations=1)
-    mask = d
-
-    x, y, w, h = cv2.boundingRect(d)
-    bbox = [x + add, y, x + w + add, y + h]
-
-    return bbox, mask
-
-
-
-def detect_bboxes(im):
-    """
-    This function detects the text box of an image and calculates
-    the mask to supress it.
-    The function calls other functions that already caclulate the mask and
-    coordinates for individual images.
-    Args:
-           images: set of images
-
-    Returns:
-           coord: list of list of lists of the coordinates of the text box.
-
-           mask: list of binary images in the zone for the text box
-    """
-
-    multiple_paints, split_point, _ = detect_paintings(im)
-    if multiple_paints:
-        cut = np.int(split_point - 200)
-        im1 = im[:, :cut, :]
-        bbox1, submask_1 = detect_bbox(im1, 0)
-        im2 = im[:, cut:, :]
-        bbox2, submask_2 = detect_bbox(im2, cut)
-        mask = np.concatenate((submask_1, submask_2), axis=1)
-        return [bbox1, bbox2], mask
-    else:
-        bbox, mask = detect_bbox(im, 0)
-        return [bbox], mask
-    
-    
-def cut_image_gray(mask, im):
-
-    mask = mask * 1
-    sx, sy = np.shape(mask)
-    sx_mid = np.int(sx / 2)
-    sy_mid = np.int(sy / 2)
-    horiz = mask[sx_mid, :]
-    verti = mask[:, sy_mid]
-    h = np.where(horiz == 1)
-    v = np.where(verti == 1)
-    lx = np.min(h)
-    rx = np.max(h)
-    ty = np.min(v)
-    by = np.max(v)
-    cut_im = im[ty:by, lx:rx]
-    #    print(lx,rx,ty,by)
-    return cut_im
-
-    
 def cut_image(mask, im):
 
     mask = mask * 1
