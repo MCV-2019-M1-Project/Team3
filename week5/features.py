@@ -57,6 +57,50 @@ def loc_bin_pat(im, bins=50):
 
     return hist_im
 
+def loc_bin_pat_mr(im, bins=50, splits=(3, 3)):
+    """
+    Calculates the histogram of the local binary image of an input image
+    Optional parameters to modify:
+        - Percentage of cropped section: 0.4
+        - Number of points: 4
+        - Radius: 1
+        - Method: uniform
+    Args:
+        im: 3 color image
+        bins: number of bins of the histogram (10 optimal)
+
+    Rrturn:
+        lbp_hist: the local binary pattern histogram of the input image
+    """
+
+    x_splits, y_splits = splits
+
+    im = cv2.resize(im, (400, 400))
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2LAB)[..., 0]
+
+    x_len = int(im.shape[0] / x_splits)
+    y_len = int(im.shape[1] / y_splits)
+
+    hist_ims = []
+    for i in range(x_splits):
+        for j in range(y_splits):
+            small_im = im[i * x_len : (i + 1) * x_len, j * y_len : (j + 1) * y_len]
+
+            lbp_im = feature.local_binary_pattern(small_im, 8, 10, "nri_uniform")
+            lbp_im1 = feature.local_binary_pattern(small_im, 8, 20, "nri_uniform")
+            lbp_im2 = feature.local_binary_pattern(small_im, 8, 30, "nri_uniform")
+
+            hist_im = np.concatenate(
+                (
+                    np.histogram(lbp_im, bins, density=True)[0],
+                    np.histogram(lbp_im1, bins, density=True)[0],
+                    np.histogram(lbp_im2, bins, density=True)[0],
+                )
+            )
+            hist_ims.append(hist_im)
+
+    return np.array(hist_ims).ravel()
+
 
 def compute_image_dct(image, block_size=64, num_coefs=10, mask=None):
 

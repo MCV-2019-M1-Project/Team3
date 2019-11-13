@@ -11,6 +11,7 @@ from utils import detect_denoise, group_paintings, save_predictions, mkdir
 from features import (
     compare_ssim,
     loc_bin_pat,
+    loc_bin_pat_mr,
     compute_image_dct,
     compute_mr_histogram,
     surf_descriptor,
@@ -27,7 +28,7 @@ def main():
 
     args = parse_args()
     args.query = "qsd2_w3"
-    args.pipeline = ["text", "dct"]
+    args.pipeline = ["text", "lbp_mr"]
     os.chdir("..")
 
     dir = "E:\GitHub\Team3_2\My First Project-c10e01087b39.json"
@@ -45,11 +46,11 @@ def main():
 
     if any(
         [
-            p not in ["lbp", "text", "color", "dct", "ssim", "surf", "orb", "sift"]
+            p not in ["lbp", "lbp_mr", "text", "color", "dct", "ssim", "surf", "orb", "sift"]
             for p in args.pipeline
         ]
     ):
-        valid = '"lbp, "text", "color", "dct", "ssim" "surf". "orb", "sift"'
+        valid = '"lbp, "lbp_mr", "text", "color", "dct", "ssim" "surf". "orb", "sift"'
         raise ValueError(
             "Invalid option in pipeline. Expected any combination of {} but got {}".format(
                 valid, args.pipeline
@@ -102,6 +103,10 @@ def main():
 
                 elif "lbp" in args.pipeline:
                     extractor = loc_bin_pat
+                    distance = "hellinger"
+
+                elif "lbp_mr" in args.pipeline:
+                    extractor = loc_bin_pat_mr
                     distance = "hellinger"
 
                 elif "dct" in args.pipeline:
