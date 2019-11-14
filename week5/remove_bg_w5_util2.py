@@ -16,6 +16,8 @@ from skimage.filters import sobel
 from PIL import Image
 import PIL
 
+from utils import cut_image
+
 
 
 
@@ -118,7 +120,7 @@ def mask_label(image):
     canny = find_contours(image)
     canny =  cv2.dilate(canny,kernel,iterations = 1)
     canny =  cv2.erode(canny,kernel,iterations = 1)
-    cnts,_ = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _,cnts,_ = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     mask = np.ones(np.shape(canny))
     for cnt in cnts:
 #        x,y,w,h = cv2.boundingRect(cnt)
@@ -229,7 +231,7 @@ def detect_paintings(label):
     num_paintings = np.max(label)
     add = 10
     if num_paintings==1:          
-        args_r = np.append(args_r,0)
+        args_r = np.append(args_r,max(sx,sy))
         vertical = False
         return num_paintings, args_r, vertical
     else:
@@ -290,6 +292,43 @@ def cut_painting(image, args):
     return sub_images
 
 
+def cut_painting_with_color(image, args):
+    """
+    This function cuts the image into the different paintings
+    Args:
+        image: image to cut
+        args: indices where the paintings end
+    Returns:
+        sub_images: list of images containing a single painting
+
+    """
+    sx, sy = np.shape(image)[:2]
+    sub_images = []
+    if sx > sy:
+        for i in range(0, np.shape(args)[0]):
+            if i == 0:
+                sub_im = image[:args[i], :, :]
+                sub_images.append(sub_im)
+            elif i == np.shape(args)[0] - 1:
+                sub_im = image[args[i - 1]:, :, :]
+                sub_images.append(sub_im)
+            else:
+                sub_im = image[args[i - 1]:args[i], :, :]
+                sub_images.append(sub_im)
+    else:
+        for i in range(0, np.shape(args)[0]):
+            if i == 0:
+                sub_im = image[:, :args[i], :]
+                sub_images.append(sub_im)
+            elif i == np.shape(args)[0] - 1:
+                sub_im = image[:, args[i - 1]:, :]
+                sub_images.append(sub_im)
+
+            else:
+                sub_im = image[:, args[i - 1]:args[i], :]
+                sub_images.append(sub_im)
+
+    return sub_images
 
 def pres_rec_f1_2(GT, pred):
 
@@ -411,6 +450,27 @@ def mask_coordinates(mask, alpha, ox, oy, offset, vertical):
         rot_bounding_cords[i,:] = rot_cords
     return bounding_cords, rot_bounding_cords
 
+def group_paintings_rotation(img, process_bg):
+
+    paintings = [img]
+
+    if process_bg:
+        im = img
+        oy, ox = (np.shape(im)[:2])
+        ox = np.int(ox / 2)
+        oy = np.int(oy / 2)
+
+        im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+        mask, label = mask_label(im)
+        rot_angle, rotated_im, rotated_label, rotated_mask, back_angle_rot = rotation(im, label, mask)
+        n_p, args, vertical = detect_paintings(rotated_label)
+
+        rotated_im_with_color = imutils.rotate(img, -back_angle_rot)
+        sub_ims = cut_painting_with_color(rotated_im_with_color, args)
+        sub_mask = cut_painting(rotated_mask/255, args)
+        paintings = [cut_image(sub_mask[i], sub_ims[i]) for i in range(0,len(args))]
+    return paintings
+
 if __name__ == "__main__":
     images = [cv2.imread(file) for file in glob.glob("E:\GitHub\Team3_2\data/qsd1_w5/*.jpg")]
     GTS = [cv2.imread(file) for file in glob.glob("E:\GitHub\Team3_2\data/qsd1_w5/*.png")]
@@ -418,6 +478,10 @@ if __name__ == "__main__":
     #%%
     #example on an image
     im = images[10]
+
+    #test
+    paintings = group_paintings_rotation(im, True)
+
     oy, ox = (np.shape(im)[:2])
     ox = np.int(ox/2)
     oy = np.int(oy/2)
@@ -428,6 +492,7 @@ if __name__ == "__main__":
     n_p, args, vertical = detect_paintings(rotated_label)
     sub_ims = cut_painting(rotated_im, args)
     sub_mask = cut_painting(rotated_mask, args)
+
 
     plt.imshow(im, cmap = 'gray')
     if n_p == 1:
@@ -459,3 +524,8 @@ if __name__ == "__main__":
     #print('Precision: ', p)
     #print('Precision: ', r)
     #print('Precision: ', f)
+
+
+
+#cv2.namedWindow('1',cv2.WINDOW_NORMAL)
+#cv2.imshow('1',img)

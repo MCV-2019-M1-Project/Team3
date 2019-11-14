@@ -23,12 +23,15 @@ from features import (
 from metrics import mapk, sort
 from distances import calculate_distances
 
+from remove_bg_w5_util2 import group_paintings_rotation
+import cv2
+
 
 def main():
 
     args = parse_args()
-    args.query = "qsd1_w4"
-    args.pipeline = ["text", "lbp_mr"]
+    args.query = "qsd1_w5"
+    args.pipeline = ["text", "surf"]
     os.chdir("..")
 
     dir = "E:\GitHub\Team3_2\My First Project-c10e01087b39.json"
@@ -70,7 +73,7 @@ def main():
         # Denoise
         img, _, _, _, = detect_denoise(img, blur_type="best")
 
-        paintings = group_paintings(img, process_bg)
+        paintings = group_paintings_rotation(img, process_bg)
         im_preds = []
 
         for img in paintings:

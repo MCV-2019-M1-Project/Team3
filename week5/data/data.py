@@ -16,7 +16,7 @@ def load_data(args):
     data_files = sorted(glob.glob(data_path + "/*.jpg"))
     query_files = sorted(glob.glob(query_path + "/*.jpg"))
     text_files = sorted(glob.glob(text_path + "/*.txt"))
-    gt_file = sorted(glob.glob(query_path + "/*.pkl"))
+    gt_file = sorted(glob.glob(query_path + "/gt_corresps.pkl"))
     has_gt = bool(gt_file)
 
     author_to_image = get_authors(text_files)
