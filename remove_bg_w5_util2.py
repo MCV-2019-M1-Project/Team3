@@ -17,7 +17,7 @@ from PIL import Image
 import PIL
 
 
-
+#%%
 
 def find_lines(image):
     """
@@ -179,14 +179,14 @@ def rotation(image, label,  mask):
         back_rot_angle = -freqa[1]
     else:
         rot_angle = np.abs(freqa[0]).astype(float)
-        rotated_im = imutils.rotate(image, -rot_angle)
+        rotated_im = imutils.rotate(image, freqa[0])
         
         label = Image.fromarray(np.uint8(label))
-        rotated_label = label.rotate( -rot_angle, resample = PIL.Image.NEAREST)
+        rotated_label = label.rotate( freqa[0], resample = PIL.Image.NEAREST)
         rotated_label = np.asarray(rotated_label)
         
         mask = Image.fromarray(np.uint8(mask))
-        rotated_mask = mask.rotate( -rot_angle, resample = PIL.Image.NEAREST)
+        rotated_mask = mask.rotate( freqa[0], resample = PIL.Image.NEAREST)
         rotated_mask = np.asarray(rotated_mask)
         back_rot_angle = rot_angle
         
@@ -386,12 +386,13 @@ def mask_coordinates(mask, alpha, ox, oy, offset, vertical):
     else:
         mask = mask.astype(int)
         
-    sy, sx = np.shape(mask)
-    sym = np.int(sy/2)
-    sxm = np.int(sx/2)
+    sx, sy = np.shape(mask)
+    location_mask = np.where(mask == 1)
+    sxm = np.int((location_mask[0].min() + location_mask[0].max()) / 2)
+    sym = np.int((location_mask[1].min() + location_mask[1].max()) / 2)
     
-    line_x = mask[sym, :]
-    line_y = mask[:, sxm]
+    line_x = mask[sxm, :]
+    line_y = mask[:, sym]
     if vertical == True:
         r = np.max(np.where(line_x==1))
         l = np.min(np.where(line_x==1))
@@ -411,19 +412,57 @@ def mask_coordinates(mask, alpha, ox, oy, offset, vertical):
         rot_bounding_cords[i,:] = rot_cords
     return bounding_cords, rot_bounding_cords
 
+
+def list_ang_cord(im):
+    lista = []
+    oy, ox = (np.shape(im)[:2])
+    ox = np.int(ox/2)
+    oy = np.int(oy/2)
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    mask, label = mask_label(im)
+    
+    rot_angle, rotated_im, rotated_label, rotated_mask, back_angle_rot = rotation(im, label, mask)
+    n_p, args, vertical = detect_paintings(rotated_label)
+    sub_mask = cut_painting(rotated_mask, args)
+    
+    if n_p == 1:
+        lista_1 = []
+        bounding_cords, rot_bounding_cords = mask_coordinates(rotated_mask, back_angle_rot, ox,oy, 0, vertical)
+        lista_1.append(rot_angle)
+        lista_1.append(bounding_cords.tolist())
+        lista.append(lista_1)
+        
+    else:
+        for i in range(0,n_p):
+            if i == 0:
+                arg = 0
+                lista_1 = []
+            else:
+                arg = args[i-1]
+                lista_1 = []
+            bounding_cords, rot_bounding_cords = mask_coordinates(sub_mask[i], back_angle_rot, ox,oy, arg, vertical)
+            
+            lista_1.append(rot_angle)
+            lista_1.append(bounding_cords.tolist())
+            lista.append(lista_1)
+    return lista
+
+
     #%%
 images = [cv2.imread(file) for file in glob.glob("C:/Users/Sara/Datos/Master/M1/Project/week5/qsd1_w5/*.jpg")]
 GTS = [cv2.imread(file) for file in glob.glob("C:/Users/Sara/Datos/Master/M1/Project/week5/qsd1_w5/*.png")]
 
 #%%
 #example on an image
-im = images[10]
+im = images[0]
+
 oy, ox = (np.shape(im)[:2])
 ox = np.int(ox/2)
 oy = np.int(oy/2)
 
 im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 mask, label = mask_label(im)
+
 rot_angle, rotated_im, rotated_label, rotated_mask, back_angle_rot = rotation(im, label, mask)
 n_p, args, vertical = detect_paintings(rotated_label)
 sub_ims = cut_painting(rotated_im, args)
@@ -442,20 +481,56 @@ else:
             arg = args[i-1]
         bounding_cords, rot_bounding_cords = mask_coordinates(sub_mask[i], back_angle_rot, ox,oy, arg, vertical)
         plt.plot(rot_bounding_cords[:,0], rot_bounding_cords[:,1], 'o')
+
+            
 #%%
 
 c = 0
 masks = []
-for im in images[0:1]:
+for im in images:
     im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
     mask, label = mask_label(im)
     masks.append(mask)
-#    imageio.imsave('mask{}.png'.format(c), mask)
-    rot_angle, rotated_im, rotated_label, rotated_mask = rotation(im, label, mask)
+#    imageio.imsave('Amask{}.png'.format(c), mask)
+    rot_angle, rotated_im, rotated_label, rotated_mask, back_angle_rot = rotation(im, label, mask)
 
     c = c +1
+    print(c)
+#%%
+p,r,f = pres_rec_f1_2(GTS, masks)         
+print('Precision: ', p)   
+print('Recall: ', r)
+print('F1: ', f)
 
-#p,r,f = pres_rec_f1_2(GTS, masks)         
-#print('Precision: ', p)   
-#print('Precision: ', r)
-#print('Precision: ', f)
+#%%
+
+image = images[8]
+image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+ang, dist = find_lines(image)
+
+# Generating figure 1
+fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+ax = axes.ravel()
+
+ax[0].imshow(image, cmap=cm.gray)
+ax[0].set_title('Input image')
+ax[0].set_axis_off()
+
+ax[1].imshow(image, cmap=cm.gray)
+origin = np.array((0, image.shape[1])) 
+for angle, dist in zip(ang, dist):
+    y0, y1 = (dist - origin * np.cos(angle)) / np.sin(angle)
+    ax[1].plot(origin, (y0, y1), '-r')
+    
+    
+    
+ax[1].set_xlim(origin)
+ax[1].set_ylim((image.shape[0], 0))
+ax[1].set_axis_off()
+ax[1].set_title('Detected lines')
+    
+print(most_freq_angs(ang))
+rot_angle, rotated_im, rotated_label, rotated_mask, back_angle_rot = rotation(image, image, image)
+#plt.plot(bins[1:],hist_angs)
+#plt.xlabel('Angle (deg)')
