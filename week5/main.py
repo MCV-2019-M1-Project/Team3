@@ -27,7 +27,7 @@ from distances import calculate_distances
 def main():
 
     args = parse_args()
-    args.query = "qsd2_w3"
+    args.query = "qsd1_w4"
     args.pipeline = ["text", "lbp_mr"]
     os.chdir("..")
 
