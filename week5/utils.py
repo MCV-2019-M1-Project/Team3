@@ -165,8 +165,11 @@ def cut_image(mask, im):
 
     mask = mask * 1
     sx, sy = np.shape(mask)
-    sx_mid = np.int(sx / 2)
-    sy_mid = np.int(sy / 2)
+    location_mask = np.where(mask == 1)
+    sx_mid = np.int((location_mask[0].min() + location_mask[0].max()) / 2)
+    sy_mid = np.int((location_mask[1].min() + location_mask[1].max()) / 2)
+    #sx_mid = np.int(sx / 2)
+    #sy_mid = np.int(sy / 2)
     horiz = mask[sx_mid, :]
     verti = mask[:, sy_mid]
     h = np.where(horiz == 1)

@@ -23,7 +23,10 @@ def load_data(args):
 
     if has_gt:
         print("Loading Ground Truth")
-        gt = load_pickle(gt_file[0])
+        angles_gt = load_pickle(gt_file[0])
+        frames_gt = load_pickle(gt_file[1])
+        gt = load_pickle(gt_file[2])
+
     else:
         print("No Ground Truth Present")
         gt = []
@@ -44,7 +47,12 @@ def load_data(args):
     print("{} GT annotations".format(len(gt)))
     print("{} Authors File".format(len(author_to_image)))
 
-    return images, query, gt, author_to_image
+    gts = {
+        'preds': gt,
+        'angles': angles_gt,
+        'frames': frames_gt
+    }
+    return images, query, gts, author_to_image
 
 
 def get_authors(text_files):

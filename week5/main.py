@@ -1,13 +1,11 @@
 import os
-import warnings
+from glob import glob
 
-from tqdm import tqdm
+import cv2
 import numpy as np
-
-from detect_text import retrieve_matches
-from opt import parse_args
 from data.data import load_data
-from utils import detect_denoise, group_paintings, save_predictions, mkdir
+from detect_text import retrieve_matches
+from distances import calculate_distances
 from features import (
     compare_ssim,
     loc_bin_pat,
@@ -20,11 +18,13 @@ from features import (
     orb_descriptor, sift_descriptor, compute_hog,
 )
 from metrics import mapk, sort
-from distances import calculate_distances
+from opt import parse_args
+from remove_bg_w5_util2 import *
+from tqdm import tqdm
+from utils import detect_denoise, save_predictions, mkdir
 
 
 def main():
-
     args = parse_args()
 
     mkdir(args.output)
@@ -54,14 +54,18 @@ def main():
 
     preds = []
     authors = []
-
+    preds_angles = []
     print("Processing Query Set")
     for i, img in enumerate(tqdm(query, total=len(query))):
-
         # Denoise
-        img, _, _, _, = detect_denoise(img, blur_type="best")
 
-        paintings = group_paintings(img, process_bg)
+
+        paintings = group_paintings_rotation(img, process_bg)
+        img, _, _, _, = detect_denoise(img, blur_type="best")
+        preds_angles.append(list_ang_cord(img))
+
+        from matplotlib import pyplot as plt
+
         im_preds = []
 
         for img in paintings:
@@ -174,7 +178,7 @@ def main():
         preds.append(im_preds)
 
     if has_gt:
-        gt_flat = [[val] for p in gt for val in p]
+        gt_flat = [[val] for p in gt['preds'] for val in p]
         preds_flat = [val for p in preds for val in p]
         maps = [mapk(gt_flat, preds_flat, k=i) for i in [1, 3, 5]]
         print("Map@{}: {}".format(1, maps[0]))
@@ -190,13 +194,18 @@ def main():
             os.path.join(args.output, "preds_{}.pkl".format(args.query)), preds
         )
 
+        save_predictions(
+            os.path.join(args.output, "angles_{}.pkl".format(args.query)), preds_angles
+        )
+
         if "text" in args.pipeline:
             with open(
-                os.path.join(args.output, "authors_{}.txt".format(args.query)), "w"
+                    os.path.join(args.output, "authors_{}.txt".format(args.query)), "w"
             ) as f:
                 for author in authors:
                     f.write(author + "\n")
 
-if __name__ == "__main__":
 
+
+if __name__ == "__main__":
     main()

@@ -1,16 +1,19 @@
 import glob
 import numpy as np
-# from google.cloud import vision
+from google.cloud import vision
 import io
 import cv2
 from tqdm import tqdm
-# from similarity.normalized_levenshtein import NormalizedLevenshtein
+#from similarity.normalized_levenshtein import NormalizedLevenshtein
+from strsimpy import NormalizedLevenshtein
 
 
 def retrieve_matches(img, database, author_to_image):
 
     normalized_levenshtein = NormalizedLevenshtein()
     text, boxes = detect_text(img)
+    if text == None:
+        return [], [], [], img
     sims = []
     for word in text:
         sims.append(
@@ -61,7 +64,10 @@ def detect_text(img):
 
         vertices.append(([(vertex.x, vertex.y) for vertex in text.bounding_poly.vertices]))
 
-    text = texts[0].description.split("\n")
+    if len(texts) == 0:
+        text = None
+    else:
+        text = texts[0].description.split("\n")
 
     return text, vertices
 
