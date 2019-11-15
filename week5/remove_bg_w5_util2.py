@@ -121,6 +121,7 @@ def mask_label(image):
     canny =  cv2.dilate(canny,kernel,iterations = 1)
     canny =  cv2.erode(canny,kernel,iterations = 1)
     _,cnts,_ = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #cnts, _ = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     mask = np.ones(np.shape(canny))
     for cnt in cnts:
 #        x,y,w,h = cv2.boundingRect(cnt)
@@ -477,7 +478,7 @@ if __name__ == "__main__":
 
     #%%
     #example on an image
-    im = images[10]
+    im = images[7]
 
     #test
     paintings = group_paintings_rotation(im, True)

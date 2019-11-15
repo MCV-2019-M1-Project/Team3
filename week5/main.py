@@ -32,6 +32,7 @@ def main():
     args = parse_args()
     args.query = "qsd1_w5"
     args.pipeline = ["text", "surf"]
+    #args.pipeline = ["text"]
     os.chdir("..")
 
     dir = "E:\GitHub\Team3_2\My First Project-c10e01087b39.json"
@@ -70,13 +71,13 @@ def main():
     print("Processing Query Set")
     for i, img in enumerate(tqdm(query, total=len(query))):
 
-        # Denoise
-        img, _, _, _, = detect_denoise(img, blur_type="best")
-
         paintings = group_paintings_rotation(img, process_bg)
         im_preds = []
 
         for img in paintings:
+
+            # Denoise
+            img, _, _, _, = detect_denoise(img, blur_type="best")
 
             dists = []
 
@@ -187,6 +188,8 @@ def main():
         preds.append(im_preds)
 
     if has_gt:
+        for i in range(0,30):
+            print(i,preds[i],gt[i])
         gt_flat = [[val] for p in gt for val in p]
         preds_flat = [val for p in preds for val in p]
         maps = [mapk(gt_flat, preds_flat, k=i) for i in [1, 3, 5]]
