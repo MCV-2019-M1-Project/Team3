@@ -61,7 +61,6 @@ def main():
 
 
         paintings = group_paintings_rotation(img, process_bg)
-        img, _, _, _, = detect_denoise(img, blur_type="best")
         preds_angles.append(list_ang_cord(img))
 
         from matplotlib import pyplot as plt
@@ -70,6 +69,7 @@ def main():
 
         for img in paintings:
 
+            img, _, _, _, = detect_denoise(img, blur_type="best")
             dists = []
 
             # Reduce search by matching authors
