@@ -18,7 +18,7 @@ from features import (
     compare_keypoints,
     filter_matches,
     calculate_match_dist,
-    orb_descriptor, sift_descriptor,
+    orb_descriptor, sift_descriptor, compute_hog,
 )
 from metrics import mapk, sort
 from distances import calculate_distances
@@ -39,22 +39,24 @@ def main():
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = dir
     print(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'))
 
+
     mkdir(args.output)
     log_path = os.path.join(args.output, "log.txt")
 
     print(args.__dict__)
     print(args.__dict__, file=open(log_path, "a"))
 
-
     process_bg = True
 
     if any(
         [
-            p not in ["lbp", "lbp_mr", "text", "color", "dct", "ssim", "surf", "orb", "sift"]
+
+            p not in ["lbp", "lbp_mr", "text", "color", "dct", "ssim", "surf", "orb", "sift", "hog"]
             for p in args.pipeline
         ]
     ):
-        valid = '"lbp, "lbp_mr", "text", "color", "dct", "ssim" "surf". "orb", "sift"'
+        valid = '"lbp", "lbp_mr", "text", "color", "dct", "ssim" "surf". "orb", "sift", "hog"'
+
         raise ValueError(
             "Invalid option in pipeline. Expected any combination of {} but got {}".format(
                 valid, args.pipeline
@@ -117,6 +119,10 @@ def main():
                     extractor = compute_image_dct
                     distance = "euclidean"
 
+                elif "hog" in args.pipeline:
+                    extractor = compute_hog
+                    distance = "euclidean"
+
                 elif "color" in args.pipeline:
                     extractor = compute_mr_histogram
                     distance = "intersection"
@@ -173,7 +179,6 @@ def main():
 
                         else:
                             f1 = extractor(match)[None, ...]
-                            #dist = calculate_distances(f1, f2, mode="desc")
                             dist = calculate_distances(f1, f2, mode=distance)[0]
 
                         dists.append(dist)

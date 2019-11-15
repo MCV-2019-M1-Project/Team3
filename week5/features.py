@@ -2,10 +2,9 @@ from skimage.metrics import structural_similarity as ssim
 import cv2
 import numpy as np
 from skimage import feature
-# from utils import cut_image
-# import torch
-# import kornia
-# from torchvision.transforms import ToTensor
+
+from utils import cut_image
+
 
 
 def compare_ssim(im1, im2):
@@ -100,6 +99,13 @@ def loc_bin_pat_mr(im, bins=50, splits=(3, 3)):
             hist_ims.append(hist_im)
 
     return np.array(hist_ims).ravel()
+
+def compute_hog(image):
+    image = cv2.resize(image, (512, 512))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    return feature.hog(image, orientations=8,pixels_per_cell=(64, 64),cells_per_block=(5,5), multichannel=False)
+
 
 
 def compute_image_dct(image, block_size=64, num_coefs=10, mask=None):

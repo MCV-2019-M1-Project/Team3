@@ -8,6 +8,7 @@ from tqdm import tqdm
 from strsimpy import NormalizedLevenshtein
 
 
+
 def retrieve_matches(img, database, author_to_image):
 
     normalized_levenshtein = NormalizedLevenshtein()
