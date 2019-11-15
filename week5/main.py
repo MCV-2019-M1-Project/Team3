@@ -31,7 +31,7 @@ def main():
 
     args = parse_args()
     args.query = "qsd1_w5"
-    args.pipeline = ["text", "surf"]
+    args.pipeline = ["text", "hog"]
     #args.pipeline = ["text"]
     os.chdir("..")
 
