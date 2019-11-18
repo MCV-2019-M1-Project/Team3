@@ -5,7 +5,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Image Retrieval")
 
     parser.add_argument(
-        "--root_folder", type=str, default="data/dataset/", help="Dataset root folder"
+        "--root_folder", type=str, default="data/", help="Dataset root folder"
     )
 
     parser.add_argument("--query", default="qsd1_w3", help="query set to evaluate")
